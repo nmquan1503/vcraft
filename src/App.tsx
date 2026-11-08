@@ -3,6 +3,7 @@ import Home from './pages/Home/index';
 import Products from './pages/Products/index';
 import ProductDetail from './pages/ProductDetail/index';
 import Artisans from './pages/Artisans/index';
+import ArtisanDetail from './pages/ArtisanDetail/index';
 import Trace from './pages/Trace/index';
 import Header from '@/components/layout/Header';
 
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/artisans" element={<Artisans />} />
+        <Route path="/artisans/:id" element={<ArtisanDetail />} />
         <Route path="/trace/:batchId" element={<Trace />} />
       </Routes>
     </BrowserRouter>
