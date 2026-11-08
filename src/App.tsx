@@ -14,6 +14,8 @@ import QuoteList from './pages/Quote/index';
 import NewQuote from './pages/Quote/New';
 import QuoteDetail from './pages/Quote/Detail';
 import Batches from './pages/Batches/index';
+import NewsList from './pages/News/index';
+import NewsDetail from './pages/News/Detail';
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
         <Route path="/quote/new" element={<NewQuote />} />
         <Route path="/quote/:id" element={<QuoteDetail />} />
         <Route path="/batches" element={<Batches />} />
+        <Route path="/news" element={<NewsList />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
       </Routes>
     </BrowserRouter>
   );
