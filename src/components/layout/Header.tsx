@@ -9,6 +9,7 @@ const LINKS = [
   { label: 'Lô sản xuất', to: '/batches' },
   { label: 'Tin tức', to: '/news' },
   { label: 'Liên hệ', to: '/contact' },
+  { label: 'Đăng nhập', to: '/login' },
 ];
 
 export default function Header() {
