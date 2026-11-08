@@ -10,6 +10,9 @@ import Header from '@/components/layout/Header';
 import Login from './pages/Auth/Login';
 import RegisterBuyer from './pages/Auth/RegisterBuyer';
 import RegisterArtisan from './pages/Auth/RegisterArtisan';
+import QuoteList from './pages/Quote/index';
+import NewQuote from './pages/Quote/New';
+import QuoteDetail from './pages/Quote/Detail';
 
 export default function App() {
   return (
@@ -26,6 +29,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterBuyer />} />
         <Route path="/register/artisan" element={<RegisterArtisan />} />
+        <Route path="/quote" element={<QuoteList />} />
+        <Route path="/quote/new" element={<NewQuote />} />
+        <Route path="/quote/:id" element={<QuoteDetail />} />
       </Routes>
     </BrowserRouter>
   );
