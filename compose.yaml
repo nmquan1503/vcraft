@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: .
+      network: host
+      entitlements:
+        - network.host
+    container_name: vcraft-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
