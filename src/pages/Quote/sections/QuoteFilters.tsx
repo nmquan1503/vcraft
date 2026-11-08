@@ -5,8 +5,10 @@ const ALL: Array<{ value: QuoteStatus | 'ALL'; label: string }> = [
   { value: 'DRAFT', label: 'Nháp' },
   { value: 'SENT', label: 'Đã gửi' },
   { value: 'BIDDING', label: 'Đang chào giá' },
+  { value: 'ACCEPTED', label: 'Đã chấp nhận' },
   { value: 'IN_PRODUCTION', label: 'Sản xuất' },
   { value: 'DELIVERED', label: 'Đã giao' },
+  { value: 'CLOSED', label: 'Đã đóng' },
 ];
 
 interface Props {

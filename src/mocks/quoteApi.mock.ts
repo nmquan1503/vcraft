@@ -104,12 +104,15 @@ export const quoteApi = {
 
   async placeBid(quoteId: string, payload: PlaceBidPayload): Promise<Bid> {
     await delay();
+    const quote = findById(quotes, quoteId);
+    if (!quote) throw new MockApiError('Không tìm thấy yêu cầu', 404);
+
     const bid: Bid = {
       id: `bid-${Date.now()}`,
       quoteRequestId: quoteId,
       artisanId: MY_ARTISAN_ID,
       pricePerUnit: payload.pricePerUnit,
-      totalPrice: payload.totalPrice ?? 0,
+      totalPrice: payload.totalPrice ?? payload.pricePerUnit * quote.quantity,
       estimatedDays: payload.estimatedDays,
       note: payload.note ?? '',
       deliveryTerms: payload.deliveryTerms ?? '',
@@ -118,6 +121,16 @@ export const quoteApi = {
       updatedAt: new Date().toISOString(),
     };
     bids = [...bids, bid];
+
+    // SENT → BIDDING khi có bid đầu tiên
+    if (quote.status === 'SENT') {
+      quotes = quotes.map((q) =>
+        q.id === quoteId
+          ? { ...q, status: 'BIDDING' as QuoteStatus, updatedAt: new Date().toISOString() }
+          : q
+      );
+    }
+
     return bid;
   },
 
@@ -129,7 +142,17 @@ export const quoteApi = {
     await delay();
     const bid = findById(bids, bidId);
     if (!bid) throw new MockApiError('Không tìm thấy giá thầu', 404);
-    const updated: Bid = { ...bid, ...payload, updatedAt: new Date().toISOString() };
+
+    const quote = findById(quotes, bid.quoteRequestId);
+    const newPrice = payload.pricePerUnit ?? bid.pricePerUnit;
+
+    const updated: Bid = {
+      ...bid,
+      ...payload,
+      pricePerUnit: newPrice,
+      totalPrice: quote ? newPrice * quote.quantity : bid.totalPrice,
+      updatedAt: new Date().toISOString(),
+    };
     bids = bids.map((b) => (b.id === bidId ? updated : b));
     return updated;
   },
@@ -137,7 +160,14 @@ export const quoteApi = {
   async acceptBid(quoteId: string, bidId: string): Promise<MessageResponse> {
     await delay();
     quotes = quotes.map((q) =>
-      q.id === quoteId ? { ...q, status: 'IN_PRODUCTION', acceptedBidId: bidId } : q
+      q.id === quoteId
+        ? {
+            ...q,
+            status: 'IN_PRODUCTION' as QuoteStatus,
+            acceptedBidId: bidId,
+            updatedAt: new Date().toISOString(),
+          }
+        : q
     );
     bids = bids.map((b) =>
       b.id === bidId
