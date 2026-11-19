@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import './AuthLayout.css';
 
@@ -22,22 +22,30 @@ const PARTICLES = [
 export default function AuthLayout({
   eyebrow, title, subtitle, quote, children,
 }: Props) {
+  const navigate = useNavigate();
   const quoteWords = useMemo(
     () => (quote ? quote.split(' ').filter(Boolean) : []),
     [quote]
   );
 
+  const handleBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
-    <main className="bg-[#f6f1ea] text-[#1f1b18] h-[100dvh] overflow-hidden pt-16">
+    <main className="bg-[#f6f1ea] text-[#1f1b18] h-[100dvh] overflow-hidden">
       <div className="grid md:grid-cols-2 h-full">
-        
         <div className="auth-panel-left auth-grain relative hidden md:block h-full bg-[#1f1b18] overflow-hidden">
           <div
             className="auth-ken-burns absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=1600&q=80)' }}
             aria-hidden="true"
           />
-          
+
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#1f1b18] via-[#1f1b18]/60 to-transparent pointer-events-none" />
 
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -56,7 +64,17 @@ export default function AuthLayout({
             ))}
           </div>
 
-          {/* Dùng bottom-[8%] thay vì bottom-8 để đồng nhất theo tỷ lệ màn hình */}
+          <div className="absolute top-[6%] left-0 right-0 px-5 md:px-7 lg:px-10 z-10">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="group inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.26em] text-[#f6f1ea]/55 hover:text-[#d9a08b] transition-colors"
+            >
+              <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span>
+              Quay lại
+            </button>
+          </div>
+
           <div className="absolute bottom-[8%] left-0 right-0 px-5 md:px-7 lg:px-10 z-10">
             <p className="text-[10px] md:text-[11px] lg:text-[13px] uppercase tracking-[0.22em] md:tracking-[0.26em] lg:tracking-[0.3em] text-[#d9a08b] mb-2 md:mb-3">
               BatTrang Craft — Triển lãm số Bát Tràng
@@ -75,10 +93,23 @@ export default function AuthLayout({
           </div>
         </div>
 
-        <div className="auth-panel-right h-full overflow-y-auto flex flex-col justify-start pt-20 md:pt-24 pb-12 px-5 sm:px-8 md:px-12 lg:px-16 max-w-xl w-full mx-auto">
-          <Link to="/" className="font-serif text-2xl mb-4 sm:mb-6 inline-block self-start transition-colors">
-            BatTrang <span className="text-[#b45f3c]">Craft</span>
-          </Link>
+        <div className="auth-panel-right h-full overflow-y-auto flex flex-col justify-start pt-8 md:pt-12 pb-12 px-5 sm:px-8 md:px-12 lg:px-16 max-w-xl w-full mx-auto">
+          <div className="flex items-center justify-between mb-8 md:mb-10">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="group inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[#1f1b18]/50 hover:text-[#b45f3c] transition-colors"
+            >
+              <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span>
+              Quay lại
+            </button>
+            <Link
+              to="/"
+              className="font-serif text-lg text-[#1f1b18]/80 hover:opacity-80 transition-opacity"
+            >
+              BatTrang <em className="italic text-[#b45f3c]">Craft</em>
+            </Link>
+          </div>
 
           <div className="auth-stagger">
             <p className="text-[11px] sm:text-[13px] uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#b45f3c] mb-2 font-semibold" style={{ ['--i' as string]: 0 }}>
