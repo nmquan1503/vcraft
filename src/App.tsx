@@ -22,6 +22,9 @@ import ArtisanProfileEdit from './pages/Dashboard/Artisan/Profile';
 import NewProduct from './pages/Dashboard/Artisan/NewProduct';
 import NewBatch from './pages/Dashboard/Artisan/NewBatch';
 
+import MyBatches from './pages/Dashboard/Artisan/Batches';
+import BatchDetail from './pages/Dashboard/Artisan/BatchDetail';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -69,11 +72,29 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Lô sản xuất — list + tạo mới + chi tiết */}
+        <Route
+          path="/dashboard/artisan/batches"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <MyBatches />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard/artisan/batches/new"
           element={
             <ProtectedRoute roles={['ARTISAN']}>
               <NewBatch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/artisan/batches/:id"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <BatchDetail />
             </ProtectedRoute>
           }
         />

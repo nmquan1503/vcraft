@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const LINKS = [
-  { to: '/dashboard/artisan', label: 'Tổng quan' },
+  { to: '/dashboard/artisan', label: 'Tổng quan', exact: true },
   { to: '/dashboard/artisan/profile', label: 'Hồ sơ xưởng' },
   { to: '/dashboard/artisan/products/new', label: 'Đăng sản phẩm' },
+  { to: '/dashboard/artisan/batches', label: 'Lô của tôi' },
   { to: '/dashboard/artisan/batches/new', label: 'Tạo lô mới' },
 ];
 
