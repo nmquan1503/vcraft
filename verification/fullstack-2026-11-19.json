@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-19",
+  "branch": "fix/backend-review",
+  "backend_base": "69afd2cea520ea86a00895779f32197a92011b97",
+  "frontend_source": "https://github.com/nmquan1503/vcraft",
+  "frontend_commit": "9e898435cf32ecf3acb5f2a2449c8e92b110680e",
+  "merge_strategy": "preserve both histories; import FE under frontend prefix",
+  "backend": {
+    "surefire-reports": {
+      "tests": 89,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "failsafe-reports": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "frontend": {
+    "lint": "pass, zero warnings",
+    "typescript_build": "pass",
+    "unit_tests": 6,
+    "browser_e2e_scenarios": 8,
+    "e2e_result": "pass"
+  },
+  "production_runtime": "Nginx 1.28 + non-root JDK21 JAR + PostgreSQL15 + Mailpit, isolated Docker network",
+  "proxy_checks": [
+    "SPA deep links",
+    "real API JSON",
+    "uploaded JPEG served through proxy"
+  ],
+  "compose_config": "three overlays validated",
+  "complete_multistage_compose_build": "not executed",
+  "github_remote_changes": "none; deliver bundle for user to update same branch"
+}

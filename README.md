@@ -1,3 +1,5 @@
+> Đã tích hợp frontend tại `frontend/` trên chính nhánh `fix/backend-review`. Xem [FULLSTACK.md](FULLSTACK.md) để chạy website, test và cập nhật repo.
+
 # vCraft — Nền tảng số Làng nghề Gốm Bát Tràng (Backend)
 > **Môn học:** INT3306 - Phát triển ứng dụng web | Fall 2026
 
