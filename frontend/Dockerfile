@@ -1,13 +1,12 @@
-FROM node:22-alpine
-
+FROM node:24-alpine AS build
 WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm install
-
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
+RUN npm run build
 
-EXPOSE 5173
-
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+FROM nginx:1.28-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+RUN chmod -R a+rX /usr/share/nginx/html
+EXPOSE 80

@@ -16,7 +16,7 @@ WORKDIR /app
 RUN addgroup -S vcraft && adduser -S vcraft -G vcraft
 RUN mkdir -p /app/uploads && chown -R vcraft:vcraft /app
 
-COPY --from=builder /build/target/*.jar app.jar
+COPY --from=builder --chmod=0444 /build/target/*.jar app.jar
 
 USER vcraft
 EXPOSE 8080

@@ -1,14 +1,14 @@
-name: Backend verification
+name: Fullstack integration
 on:
   push:
-    branches: [main, master, 'fix/**', 'feat/**']
+    branches: [main, master, fix/backend-review]
   pull_request:
 permissions:
   contents: read
 jobs:
-  verify:
+  fullstack:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -16,12 +16,47 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Unit and PostgreSQL integration tests
-        run: ./mvnw --batch-mode --no-transfer-progress -Pintegration clean verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Backend tests and package
+        run: ./mvnw -B --no-transfer-progress -Pintegration clean verify
+      - name: Frontend dependencies, lint, tests and production build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: Start isolated E2E services
+        run: |
+          docker run -d --name vcraft-e2e-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vcraft_e2e -p 55433:5432 postgres:15-alpine
+          docker run -d --name vcraft-e2e-mail -p 11025:1025 -p 18025:8025 axllent/mailpit:v1.27
+          nohup java -jar target/vcraft-backend-0.0.1-SNAPSHOT.jar > backend-e2e.log 2>&1 &
+          node frontend/scripts/wait-api.mjs
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:55433/vcraft_e2e
+          APP_BASE_URL: http://localhost:3000
+          FRONTEND_URL: http://localhost:3000
+          PASSWORD_RESET_URL: http://localhost:3000/reset-password
+          MAIL_ENABLED: 'true'
+          SMTP_HOST: localhost
+          SMTP_PORT: '11025'
+          SMTP_STARTTLS: 'false'
+      - name: Real browser flows
+        working-directory: frontend
+        run: npm run test:e2e
+        env:
+          E2E_MAILPIT_URL: http://localhost:18025
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: backend-test-reports
+          name: fullstack-results
           path: |
             target/surefire-reports/
             target/failsafe-reports/
+            frontend/test-results/
+            backend-e2e.log
