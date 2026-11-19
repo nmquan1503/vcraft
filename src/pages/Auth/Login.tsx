@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '@/api';
-import { getAccessToken } from '@/utils/tokenStorage';
+import { useAuth } from '@/context/AuthContext';
 import AuthLayout from './sections/AuthLayout';
 import AuthInput from './sections/AuthInput';
 
@@ -9,6 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
+  const { isAuthenticated, login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,10 +18,10 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (getAccessToken()) {
+    if (isAuthenticated) {
       navigate(redirect, { replace: true });
     }
-  }, [navigate, redirect]);
+  }, [isAuthenticated, navigate, redirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await authApi.login({ email: email.trim(), password });
+      const res = await authApi.login({ email: email.trim(), password });
+      login(res);
       navigate(redirect, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại.');

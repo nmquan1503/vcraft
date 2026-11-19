@@ -21,84 +21,86 @@ import ArtisanOverview from './pages/Dashboard/Artisan/index';
 import ArtisanProfileEdit from './pages/Dashboard/Artisan/Profile';
 import NewProduct from './pages/Dashboard/Artisan/NewProduct';
 import NewBatch from './pages/Dashboard/Artisan/NewBatch';
-
 import MyBatches from './pages/Dashboard/Artisan/Batches';
 import BatchDetail from './pages/Dashboard/Artisan/BatchDetail';
+import { AuthProvider } from '@/context/AuthContext';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/artisans" element={<Artisans />} />
-        <Route path="/artisans/:id" element={<ArtisanDetail />} />
-        <Route path="/trace/:batchId" element={<Trace />} />
-        <Route path="/map" element={<MapPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<RegisterBuyer />} />
-        <Route path="/register/artisan" element={<RegisterArtisan />} />
-        <Route path="/quote" element={<QuoteList />} />
-        <Route path="/quote/new" element={<NewQuote />} />
-        <Route path="/quote/:id" element={<QuoteDetail />} />
-        <Route path="/batches" element={<Batches />} />
-        <Route path="/news" element={<NewsList />} />
-        <Route path="/news/:id" element={<NewsDetail />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/artisans" element={<Artisans />} />
+          <Route path="/artisans/:id" element={<ArtisanDetail />} />
+          <Route path="/trace/:batchId" element={<Trace />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterBuyer />} />
+          <Route path="/register/artisan" element={<RegisterArtisan />} />
+          <Route path="/quote" element={<QuoteList />} />
+          <Route path="/quote/new" element={<NewQuote />} />
+          <Route path="/quote/:id" element={<QuoteDetail />} />
+          <Route path="/batches" element={<Batches />} />
+          <Route path="/news" element={<NewsList />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
 
-        {/* ─── Artisan Dashboard ─── */}
-        <Route
-          path="/dashboard/artisan"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <ArtisanOverview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/artisan/profile"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <ArtisanProfileEdit />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/artisan/products/new"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <NewProduct />
-            </ProtectedRoute>
-          }
-        />
+          {/* ─── Artisan Dashboard ─── */}
+          <Route
+            path="/dashboard/artisan"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <ArtisanOverview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/artisan/profile"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <ArtisanProfileEdit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/artisan/products/new"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <NewProduct />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Lô sản xuất — list + tạo mới + chi tiết */}
-        <Route
-          path="/dashboard/artisan/batches"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <MyBatches />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/artisan/batches/new"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <NewBatch />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/artisan/batches/:id"
-          element={
-            <ProtectedRoute roles={['ARTISAN']}>
-              <BatchDetail />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+          {/* Lô sản xuất — list + tạo mới + chi tiết */}
+          <Route
+            path="/dashboard/artisan/batches"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <MyBatches />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/artisan/batches/new"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <NewBatch />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/artisan/batches/:id"
+            element={
+              <ProtectedRoute roles={['ARTISAN']}>
+                <BatchDetail />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
