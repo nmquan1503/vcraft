@@ -5,4 +5,7 @@ export const SORT_OPTIONS = [
   { value: 'name_asc', label: 'Tên A → Z' },
 ];
 
-export const PAGE_SIZE = 9;
+// 1 featured + 12 regular = 2 block × 6 items
+// → tablet (2 col): 3 rows × 2 = fill đẹp
+// → desktop (3 col): 2 rows × 3 = fill đẹp
+export const PAGE_SIZE = 13;
