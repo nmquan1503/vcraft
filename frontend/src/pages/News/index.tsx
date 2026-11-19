@@ -10,13 +10,15 @@ type FilterValue = NewsType | 'ALL';
 
 export default function NewsList() {
   const [news, setNews] = useState<News[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
   const [filter, setFilter] = useState<FilterValue>('ALL');
   const [total, setTotal] = useState(0);
 
+  const queryKey=JSON.stringify([filter]);
+  const loading=loadedQuery!==queryKey;
+
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     newsApi
       .list({
@@ -29,13 +31,13 @@ export default function NewsList() {
         setTotal(res.totalElements);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [filter]);
+  }, [filter, queryKey]);
 
   return (
     <main className="bg-[#f6f1ea] text-[#1f1b18] min-h-screen">

@@ -1,31 +1,38 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home/index';
-import Products from './pages/Products/index';
-import ProductDetail from './pages/ProductDetail/index';
-import Artisans from './pages/Artisans/index';
-import ArtisanDetail from './pages/ArtisanDetail/index';
-import Trace from './pages/Trace/index';
-import MapPage from './pages/Map/index';
 import Header from '@/components/layout/Header';
-import Login from './pages/Auth/Login';
-import RegisterBuyer from './pages/Auth/RegisterBuyer';
-import RegisterArtisan from './pages/Auth/RegisterArtisan';
-import QuoteList from './pages/Quote/index';
-import NewQuote from './pages/Quote/New';
-import QuoteDetail from './pages/Quote/Detail';
-import Batches from './pages/Batches/index';
-import NewsList from './pages/News/index';
-import NewsDetail from './pages/News/Detail';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import ArtisanOverview from './pages/Dashboard/Artisan/index';
-import ArtisanProfileEdit from './pages/Dashboard/Artisan/Profile';
-import NewProduct from './pages/Dashboard/Artisan/NewProduct';
-import NewBatch from './pages/Dashboard/Artisan/NewBatch';
+import ApiNotice from './components/ui/ApiNotice';
+
+const Products = lazy(() => import('./pages/Products/index'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail/index'));
+const Artisans = lazy(() => import('./pages/Artisans/index'));
+const ArtisanDetail = lazy(() => import('./pages/ArtisanDetail/index'));
+const Trace = lazy(() => import('./pages/Trace/index'));
+const MapPage = lazy(() => import('./pages/Map/index'));
+const Login = lazy(() => import('./pages/Auth/Login'));
+const RegisterBuyer = lazy(() => import('./pages/Auth/RegisterBuyer'));
+const RegisterArtisan = lazy(() => import('./pages/Auth/RegisterArtisan'));
+const QuoteList = lazy(() => import('./pages/Quote/index'));
+const NewQuote = lazy(() => import('./pages/Quote/New'));
+const QuoteDetail = lazy(() => import('./pages/Quote/Detail'));
+const Batches = lazy(() => import('./pages/Batches/index'));
+const NewsList = lazy(() => import('./pages/News/index'));
+const NewsDetail = lazy(() => import('./pages/News/Detail'));
+const ArtisanOverview = lazy(() => import('./pages/Dashboard/Artisan/index'));
+const ArtisanProfileEdit = lazy(() => import('./pages/Dashboard/Artisan/Profile'));
+const NewProduct = lazy(() => import('./pages/Dashboard/Artisan/NewProduct'));
+const NewBatch = lazy(() => import('./pages/Dashboard/Artisan/NewBatch'));
+const PasswordRecovery = lazy(() => import('./pages/Auth/PasswordRecovery'));
+const AdminDashboard = lazy(() => import('./pages/Dashboard/Admin'));
 
 export default function App() {
   return (
     <BrowserRouter>
       <Header />
+      <ApiNotice />
+      <Suspense fallback={<main className="pt-32 px-6">Đang tải trang…</main>}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -34,13 +41,16 @@ export default function App() {
         <Route path="/artisans/:id" element={<ArtisanDetail />} />
         <Route path="/trace/:batchId" element={<Trace />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/dashboard/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/forgot-password" element={<PasswordRecovery />} />
+        <Route path="/reset-password" element={<PasswordRecovery reset />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterBuyer />} />
         <Route path="/register/artisan" element={<RegisterArtisan />} />
         <Route path="/quote" element={<QuoteList />} />
-        <Route path="/quote/new" element={<NewQuote />} />
+        <Route path="/quote/new" element={<ProtectedRoute roles={['BUYER', 'ADMIN']}><NewQuote /></ProtectedRoute>} />
         <Route path="/quote/:id" element={<QuoteDetail />} />
-        <Route path="/batches" element={<Batches />} />
+        <Route path="/batches" element={<ProtectedRoute roles={['ARTISAN']}><Batches /></ProtectedRoute>} />
         <Route path="/news" element={<NewsList />} />
         <Route path="/news/:id" element={<NewsDetail />} />
 
@@ -77,7 +87,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<main className="min-h-screen p-8 pt-32"><h1 className="text-3xl">Không tìm thấy trang</h1><a href="/" className="underline">Về trang chủ</a></main>}/>
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

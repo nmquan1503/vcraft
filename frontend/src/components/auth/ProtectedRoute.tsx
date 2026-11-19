@@ -12,12 +12,12 @@ export default function ProtectedRoute({ roles, children }: Props) {
   const token = getAccessToken();
   const user = getUser();
 
-  if (!token) {
+  if (!token || !user) {
     const redirect = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?redirect=${redirect}`} replace />;
   }
 
-  if (roles && user && !roles.includes(user.role)) {
+  if (roles && !roles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
 

@@ -48,7 +48,7 @@ export const mapApi = {
       phone: artisan.phone,
       rating: Math.round(rating * 10) / 10, // 1 chữ số thập phân
       productCount,
-      description: artisan.description,
+      description: artisan.description ?? '',
     };
   },
 };

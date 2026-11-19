@@ -47,6 +47,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
             sortObj = Sort.by(Sort.Direction.DESC, "price");
         }
 
+        if ("name_asc".equalsIgnoreCase(sort)) sortObj = Sort.by(Sort.Direction.ASC, "name");
         var pageable = PageRequest.of(Math.max(0, page - 1), Math.max(1, limit), sortObj);
         return jpaRepository.searchProducts(artisanId, categoryId, minPrice, maxPrice, pageable)
                 .getContent().stream()

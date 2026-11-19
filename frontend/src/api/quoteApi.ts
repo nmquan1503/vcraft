@@ -2,6 +2,7 @@ import client from './client';
 import { ENDPOINTS } from './endpoints';
 import { safeMutation, safeQuery, emptyPage } from './_helpers';
 import type {
+  WorkshopAllocation, BidAllocation, AllocationProgress,
   QuoteRequest,
   QuoteWithBids,
   Bid,
@@ -96,6 +97,17 @@ export const quoteApi = {
       () => client.patch(ENDPOINTS.QUOTE.REJECT_BID(quoteId, bidId)),
       L('rejectBid')
     ),
+
+  startProduction: (id: string): Promise<QuoteRequest> => safeMutation(
+    () => client.patch(ENDPOINTS.QUOTE.START_PRODUCTION(id)), L('startProduction')),
+  allocate: (id: string, parts: WorkshopAllocation[]): Promise<QuoteRequest[]> => safeMutation(
+    () => client.post(ENDPOINTS.QUOTE.ALLOCATIONS(id), parts), L('allocate')),
+  acceptAllocations: (id: string, parts: BidAllocation[]): Promise<QuoteRequest[]> => safeMutation(
+    () => client.post(ENDPOINTS.QUOTE.ACCEPT_ALLOCATIONS(id), parts), L('acceptAllocations')),
+  allocations: (id: string): Promise<QuoteRequest[]> => safeQuery(
+    () => client.get(ENDPOINTS.QUOTE.ALLOCATIONS(id)), [], L('allocations')),
+  progress: (id: string): Promise<AllocationProgress | null> => safeQuery(
+    () => client.get(ENDPOINTS.QUOTE.PROGRESS(id)), null, L('progress')),
 
   markDelivered: (
     quoteId: string,

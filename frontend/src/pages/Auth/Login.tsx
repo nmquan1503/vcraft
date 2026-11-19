@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '@/api';
-import { getAccessToken } from '@/utils/tokenStorage';
+import { getAccessToken, getUser } from '@/utils/tokenStorage';
 import AuthLayout from './sections/AuthLayout';
 import AuthInput from './sections/AuthInput';
 
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
+  const requested = searchParams.get('redirect') || '/';
+  const redirect = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +18,7 @@ export default function Login() {
 
   // Nếu đã login → redirect luôn
   useEffect(() => {
-    if (getAccessToken()) {
+    if (getAccessToken() && getUser()) {
       navigate(redirect, { replace: true });
     }
   }, [navigate, redirect]);
@@ -88,6 +89,7 @@ export default function Login() {
           {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
         </button>
 
+        <Link to="/forgot-password" className="block text-sm text-[#b45f3c]">Quên mật khẩu?</Link>
         <div className="text-center text-xs text-[#1f1b18]/50 pt-2">
           Chưa có tài khoản?{' '}
           <Link to="/register" className="text-[#b45f3c] hover:underline">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { productApi, categoryApi, batchApi, artisanApi } from '@/api';
 import type { ArtisanProfile, Category, Batch } from '@/types';
@@ -13,6 +13,10 @@ const labelCls =
 
 export default function NewProduct() {
   const navigate = useNavigate();
+  const productId = useRef<string|null>(null);
+  const previewUrls = useRef(new Set<string>());
+  const [photos, setPhotos] = useState<File[]>([]);
+  useEffect(()=>()=>{previewUrls.current.forEach(url=>URL.revokeObjectURL(url));},[]);
 
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,46 +53,46 @@ export default function NewProduct() {
     })();
   }, []);
 
-  // Upload ảnh tạm (vì chưa có productId) — dùng artisan endpoint
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const urls = await artisanApi.uploadImages(Array.from(files));
-      setForm((f) => ({ ...f, images: [...f.images, ...urls] }));
-    } catch {
-      setError('Không upload được ảnh.');
-    } finally {
-      setUploading(false);
-    }
+  const handleUpload = (files: FileList | null) => {
+    if (!files?.length) return;
+    const next=Array.from(files);
+    if(next.some(f=>!f.type.startsWith('image/')||f.size>10*1024*1024)) {setError('Chọn ảnh tối đa 10MB mỗi file.');return;}
+    const urls=next.map(file=>{const url=URL.createObjectURL(file);previewUrls.current.add(url);return url;});
+    setPhotos(current=>[...current,...next]);
+    setForm(current=>({...current,images:[...current.images,...urls]}));
   };
-
-  const removeImage = (idx: number) => {
-    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
+  const removeImage = (idx:number) => {
+    URL.revokeObjectURL(form.images[idx]);previewUrls.current.delete(form.images[idx]);
+    setPhotos(current=>current.filter((_,i)=>i!==idx));
+    setForm(current=>({...current,images:current.images.filter((_,i)=>i!==idx)}));
   };
 
   const handleSubmit = async () => {
     setError(null);
     if (!form.name.trim()) return setError('Tên sản phẩm không được trống.');
     if (form.price <= 0) return setError('Giá phải lớn hơn 0.');
-    if (form.stock < 1) return setError('Tồn kho phải ≥ 1.');
+    if (form.stock < 0) return setError('Tồn kho không được âm.');
 
     setSubmitting(true);
     try {
-      const created = await productApi.create({
+      const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
         price: form.price,
         stock: form.stock,
         categoryId: form.categoryId || undefined,
         batchId: form.batchId || undefined,
-        images: form.images,
-      });
-      navigate(`/products/${created.id}`, { replace: true });
+        images: [],
+      };
+      if (!productId.current) productId.current=(await productApi.create(payload)).id;
+      else await productApi.update(productId.current,{name:payload.name,description:payload.description,price:payload.price,stock:payload.stock});
+      if(photos.length) {setUploading(true);await productApi.uploadImages(productId.current,photos);}
+      navigate(`/products/${productId.current}`, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tạo được sản phẩm.');
     } finally {
       setSubmitting(false);
+      setUploading(false);
     }
   };
 
@@ -133,8 +137,8 @@ export default function NewProduct() {
       <section className="max-w-3xl mx-auto px-6 py-12">
         <div className="space-y-8">
           <div>
-            <label className={labelCls}>Tên sản phẩm *</label>
-            <input
+            <label htmlFor="NewProduct-1" className={labelCls}>Tên sản phẩm *</label>
+            <input id="NewProduct-1"
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -145,8 +149,8 @@ export default function NewProduct() {
           </div>
 
           <div>
-            <label className={labelCls}>Mô tả</label>
-            <textarea
+            <label htmlFor="NewProduct-2" className={labelCls}>Mô tả</label>
+            <textarea id="NewProduct-2"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={4}
@@ -158,8 +162,8 @@ export default function NewProduct() {
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <label className={labelCls}>Giá (VNĐ) *</label>
-              <input
+              <label htmlFor="NewProduct-3" className={labelCls}>Giá (VNĐ) *</label>
+              <input id="NewProduct-3"
                 type="number"
                 min={1}
                 value={form.price || ''}
@@ -169,10 +173,10 @@ export default function NewProduct() {
               />
             </div>
             <div>
-              <label className={labelCls}>Tồn kho *</label>
-              <input
+              <label htmlFor="NewProduct-4" className={labelCls}>Tồn kho *</label>
+              <input id="NewProduct-4"
                 type="number"
-                min={1}
+                min={0}
                 value={form.stock}
                 onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
                 className={inputCls}
@@ -182,8 +186,8 @@ export default function NewProduct() {
           </div>
 
           <div>
-            <label className={labelCls}>Danh mục</label>
-            <select
+            <label htmlFor="NewProduct-5" className={labelCls}>Danh mục</label>
+            <select id="NewProduct-5"
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
               className={`${inputCls} cursor-pointer`}
@@ -197,8 +201,8 @@ export default function NewProduct() {
           </div>
 
           <div>
-            <label className={labelCls}>Thuộc lô (tuỳ chọn)</label>
-            <select
+            <label htmlFor="NewProduct-6" className={labelCls}>Thuộc lô (tuỳ chọn)</label>
+            <select id="NewProduct-6"
               value={form.batchId}
               onChange={(e) => setForm({ ...form, batchId: e.target.value })}
               className={`${inputCls} cursor-pointer`}

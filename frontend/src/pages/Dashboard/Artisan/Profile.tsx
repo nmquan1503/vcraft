@@ -36,13 +36,13 @@ export default function ArtisanProfileEdit() {
       if (art) {
         setForm({
           workshopName: art.workshopName,
-          description: art.description,
-          familyHistory: art.familyHistory,
+          description: art.description ?? '',
+          familyHistory: art.familyHistory ?? '',
           address: art.address,
           lat: art.latitude?.toString() ?? '',
           lng: art.longitude?.toString() ?? '',
           openStatus: art.openStatus,
-          images: art.images,
+          images: art.images ?? [],
         });
       }
       setLoading(false);
@@ -143,8 +143,8 @@ export default function ArtisanProfileEdit() {
           </div>
 
           <div>
-            <label className={labelCls}>Tên xưởng *</label>
-            <input
+            <label htmlFor="workshop-profile-1" className={labelCls}>Tên xưởng *</label>
+            <input id="workshop-profile-1"
               type="text"
               value={form.workshopName}
               onChange={(e) => setForm({ ...form, workshopName: e.target.value })}
@@ -154,8 +154,8 @@ export default function ArtisanProfileEdit() {
           </div>
 
           <div>
-            <label className={labelCls}>Địa chỉ xưởng *</label>
-            <input
+            <label htmlFor="workshop-profile-2" className={labelCls}>Địa chỉ xưởng *</label>
+            <input id="workshop-profile-2"
               type="text"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
@@ -166,8 +166,8 @@ export default function ArtisanProfileEdit() {
 
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <label className={labelCls}>Vĩ độ (lat)</label>
-              <input
+              <label htmlFor="workshop-profile-3" className={labelCls}>Vĩ độ (lat)</label>
+              <input id="workshop-profile-3"
                 type="number"
                 step="0.0001"
                 value={form.lat}
@@ -178,8 +178,8 @@ export default function ArtisanProfileEdit() {
               />
             </div>
             <div>
-              <label className={labelCls}>Kinh độ (lng)</label>
-              <input
+              <label htmlFor="workshop-profile-4" className={labelCls}>Kinh độ (lng)</label>
+              <input id="workshop-profile-4"
                 type="number"
                 step="0.0001"
                 value={form.lng}
@@ -192,8 +192,8 @@ export default function ArtisanProfileEdit() {
           </div>
 
           <div>
-            <label className={labelCls}>Mô tả xưởng</label>
-            <textarea
+            <label htmlFor="workshop-profile-5" className={labelCls}>Mô tả xưởng</label>
+            <textarea id="workshop-profile-5"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={4}
@@ -204,8 +204,8 @@ export default function ArtisanProfileEdit() {
           </div>
 
           <div>
-            <label className={labelCls}>Lịch sử gia đình</label>
-            <textarea
+            <label htmlFor="workshop-profile-6" className={labelCls}>Lịch sử gia đình</label>
+            <textarea id="workshop-profile-6"
               value={form.familyHistory}
               onChange={(e) => setForm({ ...form, familyHistory: e.target.value })}
               rows={3}

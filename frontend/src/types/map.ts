@@ -5,7 +5,7 @@ export interface MapPin {
   lng: number | null;
   openStatus: boolean;
   thumbnail: string | null;
-  phone: string;
+  phone: string | null;
 }
 
 export interface MapPinDetail {
@@ -14,7 +14,7 @@ export interface MapPinDetail {
   ownerName: string;
   address: string;
   openStatus: boolean;
-  phone: string;
+  phone: string | null;
   rating: number;
   productCount: number;
   description: string;

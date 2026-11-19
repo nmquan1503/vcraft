@@ -24,7 +24,7 @@ export interface UserInfo {
   id: string;
   email: string;
   fullName: string;
-  phone: string;
+  phone: string | null;
   role: Role;
 }
 

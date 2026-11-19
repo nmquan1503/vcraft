@@ -9,13 +9,15 @@ import Footer from '@/components/layout/Footer';
 
 export default function MapPage() {
   const [pins, setPins] = useState<MapPin[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
   const [openOnly, setOpenOnly] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  const queryKey=JSON.stringify([openOnly]);
+  const loading=loadedQuery!==queryKey;
+
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     mapApi
       .pins({ openOnly })
@@ -27,13 +29,13 @@ export default function MapPage() {
         );
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [openOnly]);
+  }, [openOnly, queryKey]);
 
   const handleSelect = (id: string) => {
     setActiveId(id);

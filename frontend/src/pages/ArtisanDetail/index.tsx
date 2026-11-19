@@ -17,22 +17,22 @@ export default function ArtisanDetail() {
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
+
+  const queryKey=JSON.stringify([id]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setArtisan(null);
-    setProducts([]);
-    setReviews(null);
 
     (async () => {
       const a = await artisanApi.getById(id);
       if (cancelled) return;
 
       if (!a) {
-        setLoading(false);
+        setArtisan(null);
+        setLoadedQuery(queryKey);
         return;
       }
       setArtisan(a);
@@ -45,13 +45,13 @@ export default function ArtisanDetail() {
       if (cancelled) return;
       setProducts(prodRes.data);
       setReviews(revRes);
-      setLoading(false);
+      setLoadedQuery(queryKey);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, queryKey]);
 
   /* ────── Loading ────── */
   if (loading) {

@@ -14,13 +14,14 @@ export default function Trace() {
 
   const [story, setStory] = useState<TraceStory | null>(null);
   const [qr, setQr] = useState<QrInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
+
+  const queryKey=JSON.stringify([batchId]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!batchId) return;
     let cancelled = false;
-    setLoading(true);
-    setStory(null);
 
     (async () => {
       const [s, q] = await Promise.all([
@@ -30,13 +31,13 @@ export default function Trace() {
       if (cancelled) return;
       setStory(s);
       setQr(q);
-      setLoading(false);
+      setLoadedQuery(queryKey);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [batchId]);
+  }, [batchId, queryKey]);
 
   /* ────── Loading ────── */
   if (loading) {

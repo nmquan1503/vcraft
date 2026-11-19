@@ -29,7 +29,7 @@ export function toApiError(error: unknown): ApiError {
     );
   }
 
-  if (axiosErr.request) return new ApiError('Cannot reach server', 0, null);
+  if (axiosErr.request) return new ApiError('Không kết nối được máy chủ. Vui lòng thử lại.', 0, null);
 
   return new ApiError(error instanceof Error ? error.message : 'Unknown error', 0, null);
 }
@@ -66,7 +66,9 @@ export async function safeQuery<T>(
     const res = await factory();
     return res.data ?? defaultValue;
   } catch (error) {
-    console.error(`[${label}]`, toApiError(error));
+    const failure = toApiError(error);
+    console.error(`[${label}]`, failure);
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vcraft:api-error', {detail: failure.message}));
     return defaultValue;
   }
 }

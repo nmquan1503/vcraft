@@ -13,27 +13,25 @@ export default function Artisans() {
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
 
   // Debounce search 300ms
+  const queryKey=JSON.stringify([page,debouncedSearch]);
+  const loading=loadedQuery!==queryKey;
+
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    const t = setTimeout(() => {setDebouncedSearch(search.trim());setPage(1);}, 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset page khi search đổi
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
 
   // Fetch
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     artisanApi
       .list({
@@ -48,13 +46,13 @@ export default function Artisans() {
         setTotalPages(res.totalPages);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, queryKey]);
 
   return (
     <main className="bg-[#f6f1ea] text-[#1f1b18]">

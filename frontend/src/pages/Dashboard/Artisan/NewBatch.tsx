@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { batchApi } from '@/api';
 import type { Batch } from '@/types';
@@ -20,16 +20,17 @@ const STAGE_OPTIONS = [
 ];
 
 export default function NewBatch() {
+  const savedBatch=useRef<Batch|null>(null);
   const [form, setForm] = useState({
     name: '',
     description: '',
     quantity: 1,
   });
-  const [firstLog, setFirstLog] = useState({
+  const [firstLog, setFirstLog] = useState(()=>({
     stage: STAGE_OPTIONS[0],
     note: '',
-    timestamp: new Date().toISOString().slice(0, 16),
-  });
+    timestamp: new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16),
+  }));
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +43,13 @@ export default function NewBatch() {
 
     setSubmitting(true);
     try {
-      const batch = await batchApi.create({
+      const batch = savedBatch.current ?? await batchApi.create({
         name: form.name.trim(),
         description: form.description.trim() || undefined,
         quantity: form.quantity,
       });
 
+      savedBatch.current=batch;
       // Thêm log đầu tiên
       await batchApi.createLog(batch.id, {
         stage: firstLog.stage,
@@ -104,6 +106,7 @@ export default function NewBatch() {
               </Link>
               <Link
                 to="/dashboard/artisan/batches/new"
+                onClick={()=>{savedBatch.current=null;setCreated(null);}}
                 className="flex-1 text-center border border-[#f6f1ea]/20 text-[#f6f1ea] rounded-full px-7 py-3 text-xs uppercase tracking-widest hover:border-[#f6f1ea] transition-colors"
               >
                 + Tạo lô khác
@@ -137,8 +140,8 @@ export default function NewBatch() {
       <section className="max-w-3xl mx-auto px-6 py-12">
         <div className="space-y-8">
           <div>
-            <label className={labelCls}>Tên lô *</label>
-            <input
+            <label htmlFor="NewBatch-1" className={labelCls}>Tên lô *</label>
+            <input id="NewBatch-1"
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -149,8 +152,8 @@ export default function NewBatch() {
           </div>
 
           <div>
-            <label className={labelCls}>Mô tả lô</label>
-            <textarea
+            <label htmlFor="NewBatch-2" className={labelCls}>Mô tả lô</label>
+            <textarea id="NewBatch-2"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
@@ -161,8 +164,8 @@ export default function NewBatch() {
           </div>
 
           <div>
-            <label className={labelCls}>Số lượng sản phẩm *</label>
-            <input
+            <label htmlFor="NewBatch-3" className={labelCls}>Số lượng sản phẩm *</label>
+            <input id="NewBatch-3"
               type="number"
               min={1}
               value={form.quantity || ''}
@@ -179,8 +182,8 @@ export default function NewBatch() {
 
             <div className="space-y-6">
               <div>
-                <label className={labelCls}>Công đoạn</label>
-                <select
+                <label htmlFor="NewBatch-4" className={labelCls}>Công đoạn</label>
+                <select id="NewBatch-4"
                   value={firstLog.stage}
                   onChange={(e) => setFirstLog({ ...firstLog, stage: e.target.value })}
                   className={`${inputCls} cursor-pointer`}
@@ -193,8 +196,8 @@ export default function NewBatch() {
               </div>
 
               <div>
-                <label className={labelCls}>Thời điểm</label>
-                <input
+                <label htmlFor="NewBatch-5" className={labelCls}>Thời điểm</label>
+                <input id="NewBatch-5"
                   type="datetime-local"
                   value={firstLog.timestamp}
                   onChange={(e) => setFirstLog({ ...firstLog, timestamp: e.target.value })}
@@ -204,8 +207,8 @@ export default function NewBatch() {
               </div>
 
               <div>
-                <label className={labelCls}>Ghi chú</label>
-                <textarea
+                <label htmlFor="NewBatch-6" className={labelCls}>Ghi chú</label>
+                <textarea id="NewBatch-6"
                   value={firstLog.note}
                   onChange={(e) => setFirstLog({ ...firstLog, note: e.target.value })}
                   rows={2}

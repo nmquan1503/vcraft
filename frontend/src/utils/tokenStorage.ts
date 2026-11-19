@@ -28,6 +28,7 @@ export const setTokens = (data: {
   if (data.accessToken) localStorage.setItem(ACCESS_KEY, data.accessToken);
   if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken);
   if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  window.dispatchEvent(new Event('vcraft:auth-changed'));
 };
 
 export const setAuth = (auth: AuthResponse): void => {
@@ -42,6 +43,7 @@ export const clearTokens = (): void => {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+  window.dispatchEvent(new Event('vcraft:auth-changed'));
 };
 
 export const isAuthenticated = (): boolean => Boolean(getAccessToken());

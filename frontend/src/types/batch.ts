@@ -4,7 +4,7 @@ export interface Batch {
   id: string;
   artisanId: string;
   name: string;
-  description: string;
+  description: string | null;
   quantity: number;
   status: BatchStatus;
   qrCodeUrl: string;
@@ -17,7 +17,7 @@ export interface ProductionLog {
   id: string;
   batchId: string;
   stage: string;
-  note: string;
+  note: string | null;
   images: string[];
   loggedAt: string;
   createdAt: string;

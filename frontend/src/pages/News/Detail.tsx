@@ -22,13 +22,14 @@ export default function NewsDetail() {
   const { id } = useParams<{ id: string }>();
 
   const [news, setNews] = useState<News | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
+
+  const queryKey=JSON.stringify([id]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setNews(null);
 
     newsApi
       .getById(id)
@@ -36,11 +37,11 @@ export default function NewsDetail() {
         if (!cancelled) setNews(res);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       });
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, queryKey]);
 
   /* ────── Loading ────── */
   if (loading) {

@@ -49,8 +49,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
   return (
     <div className="space-y-6">
       <div>
-        <label className={labelCls}>Tiêu đề *</label>
-        <input
+        <label htmlFor="QuoteForm-1" className={labelCls}>Tiêu đề *</label>
+        <input id="QuoteForm-1"
           type="text"
           value={values.title}
           onChange={(e) => set('title', e.target.value)}
@@ -61,8 +61,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
       </div>
 
       <div>
-        <label className={labelCls}>Mô tả chi tiết</label>
-        <textarea
+        <label htmlFor="QuoteForm-2" className={labelCls}>Mô tả chi tiết</label>
+        <textarea id="QuoteForm-2"
           value={values.description}
           onChange={(e) => set('description', e.target.value)}
           placeholder="Kích thước, màu men, yêu cầu in ấn, đóng gói…"
@@ -74,8 +74,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
 
       <div className="grid sm:grid-cols-2 gap-6">
         <div>
-          <label className={labelCls}>Danh mục *</label>
-          <select
+          <label htmlFor="QuoteForm-3" className={labelCls}>Danh mục *</label>
+          <select id="QuoteForm-3"
             value={values.categoryId}
             onChange={(e) => set('categoryId', e.target.value)}
             disabled={loading}
@@ -88,8 +88,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
           </select>
         </div>
         <div>
-          <label className={labelCls}>Hạn hoàn thành *</label>
-          <input
+          <label htmlFor="QuoteForm-4" className={labelCls}>Hạn hoàn thành *</label>
+          <input id="QuoteForm-4"
             type="date"
             value={values.deadline}
             onChange={(e) => set('deadline', e.target.value)}
@@ -101,8 +101,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
 
       <div className="grid sm:grid-cols-2 gap-6">
         <div>
-          <label className={labelCls}>Số lượng *</label>
-          <input
+          <label htmlFor="QuoteForm-5" className={labelCls}>Số lượng *</label>
+          <input id="QuoteForm-5"
             type="number"
             min={1}
             value={values.quantity || ''}
@@ -112,8 +112,8 @@ export default function QuoteForm({ values, onChange, onSubmit, loading, error }
           />
         </div>
         <div>
-          <label className={labelCls}>Đơn vị</label>
-          <select
+          <label htmlFor="QuoteForm-6" className={labelCls}>Đơn vị</label>
+          <select id="QuoteForm-6"
             value={values.unit}
             onChange={(e) => set('unit', e.target.value)}
             disabled={loading}

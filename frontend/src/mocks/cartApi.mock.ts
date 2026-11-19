@@ -7,7 +7,7 @@ import type {
 } from '@/types';
 import { delay } from './helpers';
 
-let cart: Cart = {
+const cart: Cart = {
   id: 'cart-1',
   userId: 'user-buyer-1',
   items: [],

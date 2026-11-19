@@ -1,10 +1,10 @@
 export interface Product {
   id: string;
   artisanId: string;
-  categoryId: string;
+  categoryId: string | null;
   batchId: string | null;
   name: string;
-  description: string;
+  description: string | null;
   price: number;
   stock: number;
   images: string[];

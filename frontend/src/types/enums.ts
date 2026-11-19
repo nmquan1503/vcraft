@@ -18,6 +18,7 @@ export type OrderStatus =
   | 'CANCELLED';
 
 export type QuoteStatus =
+  | 'ALLOCATED'
   | 'DRAFT'
   | 'SENT'
   | 'BIDDING'

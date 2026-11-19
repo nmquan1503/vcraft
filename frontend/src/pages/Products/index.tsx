@@ -14,13 +14,16 @@ export default function Products() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
 
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
 
   // Load categories 1 lần
+  const queryKey=JSON.stringify([categoryId,sort,page]);
+  const loading=loadedQuery!==queryKey;
+
   useEffect(() => {
     categoryApi.list().then(setCategories);
   }, []);
@@ -28,7 +31,6 @@ export default function Products() {
   // Load products mỗi khi filter/sort/page đổi
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     productApi
       .list({
@@ -44,13 +46,13 @@ export default function Products() {
         setTotalPages(res.totalPages);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [categoryId, sort, page]);
+  }, [categoryId, sort, page, queryKey]);
 
   const handleCategoryChange = (id: string | null) => {
     setCategoryId(id);

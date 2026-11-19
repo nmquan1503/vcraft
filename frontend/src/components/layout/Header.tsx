@@ -1,19 +1,32 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { getUser } from '@/utils/tokenStorage';
+import { authApi } from '@/api';
+const subscribeAuth = (listener:()=>void) => {
+  window.addEventListener('vcraft:auth-changed',listener); window.addEventListener('storage',listener);
+  return ()=>{window.removeEventListener('vcraft:auth-changed',listener);window.removeEventListener('storage',listener);};
+};
 
 const LINKS = [
   { label: 'Trang chủ', to: '/' },
   { label: 'Bộ sưu tập', to: '/products' },
   { label: 'Nghệ nhân', to: '/artisans' },
   { label: 'Bản đồ làng nghề', to: '/map' },
-  { label: 'Lô sản xuất', to: '/batches' },
+  { label: 'Yêu cầu báo giá', to: '/quote' },
   { label: 'Tin tức', to: '/news' },
-  { label: 'Liên hệ', to: '/contact' },
-  { label: 'Đăng nhập', to: '/login' },
+
 ];
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  useSyncExternalStore(subscribeAuth, ()=>localStorage.getItem('vcraft_user'));
+  const user=getUser();
+  const navigate=useNavigate();
+  const links=[...LINKS,
+    ...(user?.role==='ARTISAN'?[{label:'Xưởng của tôi',to:'/dashboard/artisan'},{label:'Lô của tôi',to:'/batches'}]:[]),
+    ...(user?.role==='ADMIN'?[{label:'Ban quản lý',to:'/dashboard/admin'}]:[]),
+    ...(!user?[{label:'Đăng nhập',to:'/login'}]:[]),
+  ];
 
   // Khóa scroll body khi menu mở
   useEffect(() => {
@@ -83,13 +96,13 @@ export default function Header() {
           </div>
 
           {/* Links căn giữa */}
-          <nav className="flex-1 flex flex-col justify-center gap-1">
-            {LINKS.map((link, i) => (
+          <nav className="flex-1 flex flex-col justify-center gap-1 overflow-y-auto">
+            {links.map((link, i) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className="font-serif text-4xl md:text-6xl leading-tight py-2 hover:text-[#d9a08b] transition-colors"
+                className="font-serif text-3xl md:text-5xl leading-tight py-2 hover:text-[#d9a08b] transition-colors"
                 style={{
                   transitionDelay: open ? `${i * 60}ms` : '0ms',
                 }}
@@ -97,6 +110,7 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {user && <button className="text-left font-serif text-3xl py-2 text-[#d9a08b]" onClick={async()=>{await authApi.logout();setOpen(false);navigate('/login');}}>Đăng xuất</button>}
           </nav>
 
           {/* Footer overlay */}

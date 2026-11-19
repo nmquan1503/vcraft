@@ -163,7 +163,7 @@ export const quoteApi = {
       q.id === quoteId
         ? {
             ...q,
-            status: 'IN_PRODUCTION' as QuoteStatus,
+            status: 'ACCEPTED' as QuoteStatus,
             acceptedBidId: bidId,
             updatedAt: new Date().toISOString(),
           }
@@ -184,6 +184,18 @@ export const quoteApi = {
     bids = bids.map((b) => (b.id === bidId ? { ...b, status: 'REJECTED' } : b));
     return { message: 'Đã từ chối giá thầu.' };
   },
+
+  async startProduction(id: string): Promise<QuoteRequest> {
+    const quote = findById(quotes, id);
+    if (!quote || quote.status !== 'ACCEPTED') throw new MockApiError('Chưa chấp nhận giá', 409);
+    const updated: QuoteRequest = {...quote, status: 'IN_PRODUCTION'};
+    quotes = quotes.map(q => q.id === id ? updated : q);
+    return updated;
+  },
+  async allocate(): Promise<QuoteRequest[]> { throw new MockApiError('Điều phối cần kết nối backend thật', 501); },
+  async acceptAllocations(): Promise<QuoteRequest[]> { throw new MockApiError('Điều phối cần kết nối backend thật', 501); },
+  async allocations(): Promise<QuoteRequest[]> { return []; },
+  async progress(): Promise<import('@/types').AllocationProgress | null> { return null; },
 
   async markDelivered(
     quoteId: string,

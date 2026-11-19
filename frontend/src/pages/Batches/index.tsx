@@ -18,7 +18,7 @@ export default function Batches() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [myArtisanId, setMyArtisanId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
 
   const [filter, setFilter] = useState<FilterValue>('ALL');
   const [page, setPage] = useState(1);
@@ -26,6 +26,9 @@ export default function Batches() {
   const [totalCount, setTotalCount] = useState(0);
 
   // Prefetch artisan names + xưởng của tôi
+  const queryKey=JSON.stringify([filter,page,myArtisanId]);
+  const loading=loadedQuery!==queryKey;
+
   useEffect(() => {
     artisanApi.list({ limit: 100 }).then((r) => setArtisans(r.data));
     if (isArtisan) {
@@ -36,44 +39,36 @@ export default function Batches() {
   // Fetch batches
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     (async () => {
       try {
-        const isMine = filter === 'MINE';
         const statusParam: BatchStatus | undefined =
           filter === 'IN_PROGRESS' || filter === 'COMPLETED'
             ? filter
             : undefined;
 
         const res = await batchApi.list({
-          page: isMine ? 1 : page,
-          limit: isMine ? 100 : PAGE_SIZE,
+          page,
+          limit: PAGE_SIZE,
           status: statusParam,
         });
 
         if (cancelled) return;
 
-        let data = res.data;
-        let total = res.totalElements;
-        let pages = res.totalPages;
-
-        if (isMine && myArtisanId) {
-          data = data.filter((b) => b.artisanId === myArtisanId);
-          total = data.length;
-          pages = 1;
-        }
+        const data=res.data;
+        const total=res.totalElements;
+        const pages=res.totalPages;
 
         setBatches(data);
         setTotalCount(total);
         setTotalPages(pages);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [filter, page, myArtisanId]);
+  }, [filter, page, myArtisanId, queryKey]);
 
   const handleFilterChange = (v: FilterValue) => {
     setFilter(v);
@@ -111,7 +106,7 @@ export default function Batches() {
         <BatchFilter
           active={filter}
           onChange={handleFilterChange}
-          showMine={isArtisan && !!myArtisanId}
+          showMine={false}
         />
       </section>
 

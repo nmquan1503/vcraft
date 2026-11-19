@@ -2,6 +2,7 @@ import type { QuoteStatus } from '@/types';
 
 const ALL: Array<{ value: QuoteStatus | 'ALL'; label: string }> = [
   { value: 'ALL', label: 'Tất cả' },
+  { value: 'ALLOCATED', label: 'Nhiều xưởng' },
   { value: 'DRAFT', label: 'Nháp' },
   { value: 'SENT', label: 'Đã gửi' },
   { value: 'BIDDING', label: 'Đang chào giá' },
@@ -20,7 +21,7 @@ interface Props {
 export default function QuoteFilters({ variant, active, onChange }: Props) {
   const options = variant === 'buyer'
     ? ALL
-    : ALL.filter((o) => ['ALL', 'SENT', 'BIDDING'].includes(o.value as string));
+    : ALL.filter((o) => !['DRAFT', 'ALLOCATED'].includes(o.value as string));
 
   return (
     <div className="flex flex-wrap gap-2">

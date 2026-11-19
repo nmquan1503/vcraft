@@ -22,6 +22,7 @@ export default function NewQuote() {
   const handleSubmit = async (submitNow: boolean) => {
     setError(null);
 
+    if (!values.description.trim()) return setError('Vui lòng nhập mô tả yêu cầu.');
     if (!values.title.trim()) return setError('Vui lòng nhập tiêu đề.');
     if (!values.categoryId) return setError('Vui lòng chọn danh mục.');
     if (values.quantity < 1) return setError('Số lượng phải ≥ 1.');

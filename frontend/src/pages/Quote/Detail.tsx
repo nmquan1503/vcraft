@@ -8,6 +8,7 @@ import QuoteStatusBadge from './sections/QuoteStatusBadge';
 import BidForm, { type BidFormValues } from './sections/BidForm';
 import BidList from './sections/BidList';
 import Footer from '@/components/layout/Footer';
+import AllocationPanel from './sections/AllocationPanel';
 
 const fmt = (iso: string) => {
   try {
@@ -26,10 +27,13 @@ export default function QuoteDetail() {
   const [quote, setQuote] = useState<QuoteRequest | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [myArtisanId, setMyArtisanId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBidForm, setShowBidForm] = useState(false);
+
+  const queryKey=JSON.stringify([id]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -56,10 +60,13 @@ export default function QuoteDetail() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    reload().finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    let active=true;
+    quoteApi.getById(id).then(data=>{
+      if (!active) return;
+      setQuote(data?.quote??null); setBids(data?.bids??[]); setLoadedQuery(queryKey);
+    });
+    return ()=>{active=false;};
+  }, [id, queryKey]);
 
   const myBid = isArtisan && myArtisanId
     ? bids.find((b) => b.artisanId === myArtisanId)
@@ -150,6 +157,14 @@ export default function QuoteDetail() {
     } finally {
       setProcessing(null);
     }
+  };
+
+  const handleStartProduction = async () => {
+    if (!quote) return;
+    setProcessing('start'); setError(null);
+    try { await quoteApi.startProduction(quote.id); await reload(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Không bắt đầu được sản xuất.'); }
+    finally { setProcessing(null); }
   };
 
   const handleMarkDelivered = async () => {
@@ -286,6 +301,9 @@ export default function QuoteDetail() {
           </div>
         )}
 
+        {!isArtisan && <AllocationPanel quote={quote} bids={bids} onChanged={reload}/>}
+        {isArtisan && myBid?.status === 'ACCEPTED' && quote.status === 'ACCEPTED' && <button onClick={handleStartProduction} disabled={processing !== null} className="mt-8 w-full rounded-full bg-[#1f1b18] px-6 py-3 text-white disabled:opacity-50">{processing === 'start' ? 'Đang xử lý…' : 'Bắt đầu sản xuất'}</button>}
+
         {isArtisan && myBid && myBid.status === 'ACCEPTED' && quote.status === 'IN_PRODUCTION' && (
           <div className="mt-8">
             <button
@@ -341,7 +359,7 @@ export default function QuoteDetail() {
                   initial={myBid ? {
                     pricePerUnit: myBid.pricePerUnit,
                     estimatedDays: myBid.estimatedDays,
-                    note: myBid.note,
+                    note: myBid.note ?? '',
                   } : undefined}
                   totalQuantity={quote.quantity}
                   onSubmit={handlePlaceBid}
@@ -370,7 +388,7 @@ export default function QuoteDetail() {
                 ✓ Chào giá của bạn được chấp nhận
               </p>
               <p className="text-sm text-[#f6f1ea]/80">
-                Đơn hàng đang sản xuất. Cập nhật trạng thái khi giao hàng xong.
+                {quote.status === 'ACCEPTED' ? 'Hãy xác nhận bắt đầu sản xuất bằng nút bên trên.' : 'Theo dõi trạng thái sản xuất và giao hàng của phần việc này.'}
               </p>
             </div>
           )}

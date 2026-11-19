@@ -15,8 +15,13 @@ export default function QuoteList() {
   const variant: 'buyer' | 'artisan' = isArtisan ? 'artisan' : 'buyer';
 
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
+  const [page,setPage]=useState(1);
+  const [canNext,setCanNext]=useState(false);
   const [status, setStatus] = useState<QuoteStatus | 'ALL'>('ALL');
+
+  const queryKey=JSON.stringify([isArtisan,status,page]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -27,30 +32,26 @@ export default function QuoteList() {
   useEffect(() => {
     if (!getAccessToken()) return;
     let cancelled = false;
-    setLoading(true);
 
     (async () => {
       try {
         if (isArtisan) {
-          const res = await quoteApi.listIncoming();
-          const filtered = status === 'ALL'
-            ? res
-            : res.filter((q) => q.status === status);
-          if (!cancelled) setQuotes(filtered);
+          const res = await quoteApi.listIncoming({page,limit:10,status:status==='ALL'?undefined:status});
+          if (!cancelled) {setQuotes(res);setCanNext(res.length===10);}
         } else {
           const res = await quoteApi.listMine({
-            limit: 50,
+            page, limit: 10,
             status: status === 'ALL' ? undefined : status,
           });
-          if (!cancelled) setQuotes(res.data);
+          if (!cancelled) {setQuotes(res.data);setCanNext(page<res.totalPages);}
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedQuery(queryKey);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [isArtisan, status]);
+  }, [isArtisan, status, page, queryKey]);
 
   if (!getAccessToken()) return null;
 
@@ -80,7 +81,7 @@ export default function QuoteList() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 pb-4 border-b border-[#1f1b18]/10">
-        <QuoteFilters variant={variant} active={status} onChange={setStatus} />
+        <QuoteFilters variant={variant} active={status} onChange={value=>{setStatus(value);setPage(1);}} />
       </section>
 
       <section className="max-w-6xl mx-auto px-6 py-12">
@@ -109,6 +110,11 @@ export default function QuoteList() {
         )}
       </section>
 
+      <div className="mx-auto max-w-6xl px-6 pb-12 flex items-center gap-4">
+        <button disabled={page<=1||loading} onClick={()=>setPage(page-1)} className="border px-4 py-2 disabled:opacity-40">Trang trước</button>
+        <span>Trang {page}</span>
+        <button disabled={!canNext||loading} onClick={()=>setPage(page+1)} className="border px-4 py-2 disabled:opacity-40">Trang sau</button>
+      </div>
       <Footer />
     </main>
   );

@@ -3,7 +3,7 @@ import type { BidStatus, QuoteStatus } from './enums';
 export interface QuoteRequest {
   id: string;
   buyerId: string;
-  categoryId: string;
+  categoryId: string | null;
   title: string;
   description: string;
   quantity: number;
@@ -26,8 +26,8 @@ export interface Bid {
   pricePerUnit: number;
   totalPrice: number;
   estimatedDays: number;
-  note: string;
-  deliveryTerms: string;
+  note: string | null;
+  deliveryTerms: string | null;
   status: BidStatus;
   createdAt: string;
   updatedAt: string;
@@ -72,4 +72,11 @@ export interface UpdateBidPayload {
 export interface CompleteDeliveryPayload {
   deliveryNote?: string;
   deliveryImages?: string[];
+}
+export interface WorkshopAllocation { artisanId: string; quantity: number }
+export interface BidAllocation { bidId: string; quantity: number }
+export interface AllocationProgress {
+  parentId: string; overallStatus: QuoteStatus; totalQuantity: number;
+  acceptedQuantity: number; deliveredQuantity: number; confirmedQuantity: number;
+  acceptedValue: number; parts: QuoteRequest[];
 }

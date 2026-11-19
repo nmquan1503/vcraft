@@ -2,6 +2,7 @@ import type { QuoteStatus } from '@/types';
 
 const LABELS: Record<string, string> = {
   DRAFT: 'Bản nháp',
+  ALLOCATED: 'Đã chia cho nhiều xưởng',
   SENT: 'Đã gửi',
   BIDDING: 'Đang chào giá',
   ACCEPTED: 'Đã chấp nhận',

@@ -64,6 +64,10 @@ export const ENDPOINTS = {
       `/quotes/${id}/bids/${bidId}/accept`,
     REJECT_BID: (id: string, bidId: string) =>
       `/quotes/${id}/bids/${bidId}/reject`,
+    START_PRODUCTION: (id: string) => `/quotes/${id}/start-production`,
+    ALLOCATIONS: (id: string) => `/quotes/${id}/allocations`,
+    ACCEPT_ALLOCATIONS: (id: string) => `/quotes/${id}/accept-allocations`,
+    PROGRESS: (id: string) => `/quotes/${id}/allocation-progress`,
     COMPLETE: (id: string) => `/quotes/${id}/complete`,
     CONFIRM_DELIVERY: (id: string) => `/quotes/${id}/confirm-delivery`,
   },

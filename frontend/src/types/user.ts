@@ -5,7 +5,7 @@ export interface User {
   email: string;
   passwordHash: string;
   fullName: string;
-  phone: string;
+  phone: string | null;
   role: Role;
   status: UserStatus;
   createdAt: string;

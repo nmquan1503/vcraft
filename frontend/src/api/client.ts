@@ -1,106 +1,47 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import {
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-  clearTokens,
-} from '../utils/tokenStorage';
+import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../utils/tokenStorage';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
-
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 const client = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
-
 client.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-let isRefreshing = false;
-let subscribers: Array<(token: string | null) => void> = [];
-
-const flush = (token: string | null) => {
-  subscribers.forEach((cb) => cb(token));
-  subscribers = [];
-};
-
+let refreshFlight: Promise<string | null> | null = null;
 async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
-
+  const previous = getRefreshToken();
+  if (!previous) return null;
   try {
-    const { data } = await axios.post<Record<string, string>>(
-      `${API_BASE_URL}/auth/refresh-token`,
-      { refreshToken }
-    );
-    const token = data?.accessToken;
-    if (!token) return null;
-    setTokens({ accessToken: token });
-    return token;
-  } catch {
-    return null;
-  }
+    const { data } = await axios.post<{accessToken: string; refreshToken: string}>(
+      `${API_BASE_URL}/auth/refresh-token`, { refreshToken: previous }, { timeout: 15000 });
+    if (!data.accessToken || !data.refreshToken) return null;
+    // Rotation is mandatory: never retain the now-revoked refresh token.
+    setTokens(data);
+    return data.accessToken;
+  } catch { return null; }
 }
-
-interface RetryConfig extends InternalAxiosRequestConfig {
-  _retry?: boolean;
-}
-
-client.interceptors.response.use(
-  (res) => res,
-  async (error: AxiosError) => {
-    const original = error.config as RetryConfig | undefined;
-    if (!original) return Promise.reject(error);
-
-    const status = error.response?.status;
-    const url = original.url ?? '';
-    const isRefreshCall = url.includes('/auth/refresh-token');
-    const isAuthCall =
-      url.includes('/auth/login') ||
-      url.includes('/auth/register') ||
-      url.includes('/auth/forgot-password') ||
-      url.includes('/auth/reset-password');
-
-    if (status !== 401 || original._retry || isRefreshCall || isAuthCall) {
-      return Promise.reject(error);
-    }
-
-    original._retry = true;
-
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        subscribers.push((token) => {
-          if (!token) return reject(error);
-          original.headers.Authorization = `Bearer ${token}`;
-          resolve(client(original));
-        });
-      });
-    }
-
-    isRefreshing = true;
-    try {
-      const newToken = await refreshAccessToken();
-      if (!newToken) throw new Error('Refresh failed');
-
-      flush(newToken);
-      original.headers.Authorization = `Bearer ${newToken}`;
-      return client(original);
-    } catch {
-      clearTokens();
-      flush(null);
-
-      if (
-        typeof window !== 'undefined' &&
-        !window.location.pathname.startsWith('/login')
-      ) {
-        window.location.href = '/login';
-      }
-      return Promise.reject(error);
-    } finally {
-      isRefreshing = false;
-    }
+interface RetryConfig extends InternalAxiosRequestConfig { _retry?: boolean }
+client.interceptors.response.use((res) => res, async (error: AxiosError) => {
+  const original = error.config as RetryConfig | undefined;
+  if (!original || error.response?.status !== 401 || original._retry ||
+      /\/auth\/(login|register|refresh-token|forgot-password|reset-password)/.test(original.url ?? '') ||
+      !getAccessToken()) return Promise.reject(error);
+  original._retry = true;
+  if (!refreshFlight) {
+    refreshFlight = refreshAccessToken().finally(() => { refreshFlight = null; });
   }
-);
-
+  const token = await refreshFlight;
+  if (token) {
+    original.headers.Authorization = `Bearer ${token}`;
+    return client(original);
+  }
+  clearTokens();
+  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+    const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.assign(`/login?redirect=${redirect}`);
+  }
+  return Promise.reject(error);
+});
 export default client;

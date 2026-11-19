@@ -37,8 +37,8 @@ export default function BidForm({
     >
       <div className="grid sm:grid-cols-2 gap-6">
         <div>
-          <label className={labelCls}>Đơn giá (VNĐ) *</label>
-          <input
+          <label htmlFor="BidForm-1" className={labelCls}>Đơn giá (VNĐ) *</label>
+          <input id="BidForm-1"
             type="number" min={1}
             value={v.pricePerUnit || ''}
             onChange={(e) => setV({ ...v, pricePerUnit: Number(e.target.value) })}
@@ -48,8 +48,8 @@ export default function BidForm({
           />
         </div>
         <div>
-          <label className={labelCls}>Thời gian (ngày) *</label>
-          <input
+          <label htmlFor="BidForm-2" className={labelCls}>Thời gian (ngày) *</label>
+          <input id="BidForm-2"
             type="number" min={1}
             value={v.estimatedDays || ''}
             onChange={(e) => setV({ ...v, estimatedDays: Number(e.target.value) })}
@@ -71,8 +71,8 @@ export default function BidForm({
       )}
 
       <div>
-        <label className={labelCls}>Ghi chú</label>
-        <textarea
+        <label htmlFor="BidForm-3" className={labelCls}>Ghi chú</label>
+        <textarea id="BidForm-3"
           value={v.note}
           onChange={(e) => setV({ ...v, note: e.target.value })}
           placeholder="Cam kết chất lượng, lưu ý đặc biệt…"

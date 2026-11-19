@@ -64,11 +64,11 @@ export const authApi = {
       L('me')
     ),
 
-  changePassword: (payload: ChangePasswordRequest): Promise<MessageResponse> =>
-    safeMutation<MessageResponse>(
-      () => client.put(ENDPOINTS.AUTH.CHANGE_PASSWORD, payload),
-      L('changePassword')
-    ),
+  changePassword: async (payload: ChangePasswordRequest): Promise<MessageResponse> => {
+    const result = await safeMutation<MessageResponse>(() => client.put(ENDPOINTS.AUTH.CHANGE_PASSWORD, payload), L('changePassword'));
+    clearTokens();
+    return result;
+  },
 
   forgotPassword: (payload: ForgotPasswordPayload): Promise<MessageResponse> =>
     safeMutation<MessageResponse>(

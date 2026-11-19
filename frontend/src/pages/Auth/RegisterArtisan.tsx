@@ -78,7 +78,7 @@ export default function RegisterArtisan() {
       <AuthLayout
         eyebrow="Đã gửi đăng ký"
         title="Chờ duyệt."
-        subtitle="Hồ sơ xưởng của bạn đã được gửi tới Ban quản lý làng nghề. Vui lòng chờ xác nhận qua email."
+        subtitle="Hồ sơ xưởng của bạn đã được gửi tới Ban quản lý làng nghề. Bạn có thể đăng nhập để theo dõi trạng thái duyệt của xưởng."
       >
         <div className="space-y-4">
           <div className="border-l-2 border-[#b45f3c] pl-4 py-3 bg-[#b45f3c]/5">

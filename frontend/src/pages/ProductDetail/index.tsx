@@ -20,25 +20,26 @@ export default function ProductDetail() {
   const [batch, setBatch] = useState<Batch | null>(null);
   const [reviews, setReviews] = useState<ReviewListResponse | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
+
+  const queryKey=JSON.stringify([id]);
+  const loading=loadedQuery!==queryKey;
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setProduct(null);
 
     (async () => {
       const p = await productApi.getById(id);
       if (cancelled) return;
-      if (!p) { setLoading(false); return; }
+      if (!p) { setProduct(null); setLoadedQuery(queryKey); return; }
       setProduct(p);
 
       const [a, b, r, rel] = await Promise.all([
         artisanApi.getById(p.artisanId),
         p.batchId ? batchApi.getById(p.batchId) : Promise.resolve(null),
         reviewApi.listProduct(p.id, { limit: 10 }),
-        productApi.list({ categoryId: p.categoryId, limit: 4 }),
+        productApi.list({ categoryId: p.categoryId ?? undefined, limit: 4 }),
       ]);
 
       if (cancelled) return;
@@ -46,11 +47,11 @@ export default function ProductDetail() {
       setBatch(b);
       setReviews(r);
       setRelated(rel.data.filter(x => x.id !== p.id).slice(0, 3));
-      setLoading(false);
+      setLoadedQuery(queryKey);
     })();
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, queryKey]);
 
   if (loading) {
     return (

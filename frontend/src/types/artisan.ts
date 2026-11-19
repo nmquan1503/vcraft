@@ -5,14 +5,14 @@ export interface ArtisanProfile {
   userId: string;
   workshopName: string;
   ownerName: string;
-  phone: string;
+  phone: string | null;
   address: string;
   district: string;
   latitude: number | null;
   longitude: number | null;
   openStatus: boolean;
-  description: string;
-  familyHistory: string;
+  description: string | null;
+  familyHistory: string | null;
   certificates: string[];
   images: string[];
   status: ArtisanStatus;
