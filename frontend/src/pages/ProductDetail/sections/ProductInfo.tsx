@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cartApi } from '@/api';
-import { getAccessToken } from '@/utils/tokenStorage';
+import { getAccessToken, getUser } from '@/utils/tokenStorage';
 import type { Product } from '@/types';
 
 interface Props {
@@ -22,12 +22,13 @@ export default function ProductInfo({ product }: Props) {
       setMsg('Vui lòng đăng nhập để thêm vào giỏ');
       return;
     }
+    if (getUser()?.role !== 'BUYER') { setMsg('Chức năng mua hàng dành cho tài khoản người mua.'); return; }
     setAdding(true);
     try {
       await cartApi.addItem({ productId: product.id, quantity });
       setMsg('✓ Đã thêm vào giỏ');
-    } catch {
-      setMsg('Không thể thêm vào giỏ, thử lại sau');
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : 'Không thể thêm vào giỏ, thử lại sau');
     } finally {
       setAdding(false);
     }
@@ -72,6 +73,7 @@ export default function ProductInfo({ product }: Props) {
             </Link>
           </div>
 
+          <Link to="/cart" className="underline">Xem giỏ hàng và đặt hàng →</Link>
           {msg && (
             <p className={`text-xs uppercase tracking-widest ${msg.startsWith('✓') ? 'text-green-700' : 'text-[#b45f3c]'}`}>
               {msg}

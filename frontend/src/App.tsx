@@ -5,6 +5,9 @@ import Header from '@/components/layout/Header';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import ApiNotice from './components/ui/ApiNotice';
 
+const CartPage = lazy(() => import('./pages/Shopping/Cart'));
+const OrdersPage = lazy(() => import('./pages/Shopping/Orders'));
+const OrderDetail = lazy(() => import('./pages/Shopping/OrderDetail'));
 const Products = lazy(() => import('./pages/Products/index'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail/index'));
 const Artisans = lazy(() => import('./pages/Artisans/index'));
@@ -35,6 +38,9 @@ export default function App() {
       <Suspense fallback={<main className="pt-32 px-6">Đang tải trang…</main>}>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/cart" element={<ProtectedRoute roles={['BUYER']}><CartPage /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute roles={['BUYER', 'ARTISAN']}><OrdersPage /></ProtectedRoute>} />
+        <Route path="/orders/:id" element={<ProtectedRoute roles={['BUYER', 'ARTISAN', 'ADMIN']}><OrderDetail /></ProtectedRoute>} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/artisans" element={<Artisans />} />

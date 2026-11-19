@@ -151,3 +151,69 @@ test('workshop profile with nullable history can be edited and saved',async({pag
   const profile=await call('GET','/artisans/me',undefined,f.artisanAuth.accessToken);
   expect(profile.familyHistory).toBe('Ba thế hệ làm gốm E2E');
 });
+
+test('retail cart checkout, workshop fulfilment, cancellation and stock restoration', async ({ page, browser }) => {
+  const f = await fixtures();
+  await login(page, f.email);
+  await page.goto('/products/' + f.product.id);
+  await page.getByRole('button', { name: 'Thêm vào giỏ', exact: true }).click();
+  await expect(page.getByText('✓ Đã thêm vào giỏ', { exact: true })).toBeVisible();
+  await page.goto('/cart');
+  await expect(page.getByText('Tạm tính: 25.000 ₫', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: `Tăng số lượng ${f.product.name}`, exact: true }).click();
+  await expect(page.getByText('Tạm tính: 50.000 ₫', { exact: true })).toBeVisible();
+  await page.getByLabel('Thông tin nhận hàng (họ tên, số điện thoại, địa chỉ đầy đủ)').fill('Nguyễn A, 0901234567, Bát Tràng, Hà Nội');
+  await page.getByRole('button', { name: 'Đặt hàng', exact: true }).click();
+  await expect(page).toHaveURL(/\/orders\/[0-9a-f-]+$/);
+  const orderId = page.url().split('/').pop()!;
+  expect((await call('GET', '/products/' + f.product.id)).stock).toBe(98);
+  expect((await call('GET', '/cart', undefined, f.buyer.accessToken)).items).toHaveLength(0);
+  const context = await browser.newContext();
+  const workshop = await context.newPage(); await login(workshop, f.artisanEmail);
+  await workshop.goto('/orders');
+  await workshop.getByRole('link', { name: new RegExp(orderId) }).click();
+  workshop.on('dialog', dialog => dialog.accept());
+  for (const label of ['Đã xác nhận', 'Đang giao', 'Đã giao']) {
+    await workshop.getByRole('button', { name: `Cập nhật: ${label}`, exact: true }).click();
+    await expect(workshop.getByText(`Trạng thái: ${label}`, { exact: true })).toBeVisible();
+  }
+  await page.reload();
+  await expect(page.getByText('Trạng thái: Đã giao', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Hủy đơn hàng', exact: true })).toHaveCount(0);
+  await call('POST', '/cart/items', { productId: f.product.id, quantity: 1 }, f.buyer.accessToken);
+  const cancellable = await call('POST', '/orders', { shippingAddress: 'Bát Tràng', paymentMethod: 'COD' }, f.buyer.accessToken);
+  await page.goto('/orders/' + cancellable.id);
+  await page.getByLabel('Lý do hủy (không bắt buộc)').fill('Đổi nhu cầu');
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Hủy đơn hàng', exact: true }).click();
+  await expect(page.getByText('Trạng thái: Đã hủy', { exact: true })).toBeVisible();
+  expect((await call('GET', '/products/' + f.product.id)).stock).toBe(98);
+  const stranger = await call('POST', '/auth/register/buyer', { name: 'Other', email: `other-${f.uid}@example.com`, password });
+  const forbidden = await api.get('/api/v1/orders/' + orderId, { headers: { Authorization: `Bearer ${stranger.accessToken}` } });
+  expect(forbidden.status()).toBe(403);
+  await context.close();
+});
+
+test('cart removes and clears items, blocks stale stock and protects anonymous checkout', async ({ page }) => {
+  const f = await fixtures();
+  await page.goto('/cart'); await expect(page).toHaveURL(/\/login/);
+  await login(page, f.email);
+  await call('POST', '/cart/items', { productId: f.product.id, quantity: 2 }, f.buyer.accessToken);
+  await page.goto('/cart');
+  await page.getByRole('button', { name: `Giảm số lượng ${f.product.name}`, exact: true }).click();
+  await expect(page.getByText('Tạm tính: 25.000 ₫', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Xóa', exact: true }).click();
+  await expect(page.getByText('Giỏ hàng trống.', { exact: false })).toBeVisible();
+  await call('POST', '/cart/items', { productId: f.product.id, quantity: 2 }, f.buyer.accessToken);
+  await call('PUT', '/products/' + f.product.id, { stock: 1 }, f.artisanAuth.accessToken);
+  await page.reload();
+  await expect(page.getByText('Không đủ hàng; hãy giảm số lượng hoặc xóa sản phẩm.', { exact: true })).toBeVisible();
+  await page.getByLabel('Thông tin nhận hàng (họ tên, số điện thoại, địa chỉ đầy đủ)').fill('Bát Tràng');
+  await expect(page.getByRole('button', { name: 'Đặt hàng', exact: true })).toBeDisabled();
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Xóa toàn bộ', exact: true }).click();
+  await expect(page.getByText('Giỏ hàng trống.', { exact: false })).toBeVisible();
+  await page.goto('/orders');
+  await page.getByLabel('Trạng thái', { exact: true }).selectOption('CANCELLED');
+  await expect(page.getByText('Chưa có đơn hàng phù hợp.', { exact: true })).toBeVisible();
+});

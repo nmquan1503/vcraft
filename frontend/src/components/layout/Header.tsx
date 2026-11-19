@@ -23,6 +23,8 @@ export default function Header() {
   const user=getUser();
   const navigate=useNavigate();
   const links=[...LINKS,
+    ...(user?.role==='BUYER'?[{label:'Giỏ hàng',to:'/cart'}]:[]),
+    ...(user && ['BUYER','ARTISAN'].includes(user.role)?[{label:'Đơn hàng',to:'/orders'}]:[]),
     ...(user?.role==='ARTISAN'?[{label:'Xưởng của tôi',to:'/dashboard/artisan'},{label:'Lô của tôi',to:'/batches'}]:[]),
     ...(user?.role==='ADMIN'?[{label:'Ban quản lý',to:'/dashboard/admin'}]:[]),
     ...(!user?[{label:'Đăng nhập',to:'/login'}]:[]),

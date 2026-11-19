@@ -26,6 +26,12 @@ export const orderApi = {
       L('listMine')
     ),
 
+  listArtisan: (params: OrderQuery = {}): Promise<PageResponse<Order>> =>
+    safeQuery<PageResponse<Order>>(
+      () => client.get('/artisans/me/orders', { params }),
+      emptyPage<Order>(params.page, params.limit), L('listArtisan')
+    ),
+
   getById: (id: string): Promise<Order | null> =>
     safeQuery<Order | null>(
       () => client.get(ENDPOINTS.ORDER.DETAIL(id)),

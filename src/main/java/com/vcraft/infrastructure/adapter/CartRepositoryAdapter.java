@@ -63,7 +63,7 @@ public class CartRepositoryAdapter implements CartRepository {
     @Override
     @Transactional
     public void removeItem(UUID itemId) {
-        cartItemJpaRepository.deleteById(itemId);
+        cartItemJpaRepository.deleteItemById(itemId);
     }
 
     @Override

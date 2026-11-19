@@ -12,7 +12,11 @@ public interface CartItemJpaRepository extends JpaRepository<CartItemEntity, UUI
     java.util.List<CartItemEntity> findByCartId(UUID cartId);
     Optional<CartItemEntity> findByCartIdAndProductId(UUID cartId, UUID productId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM CartItemEntity c WHERE c.id = :itemId")
+    void deleteItemById(@Param("itemId") UUID itemId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM CartItemEntity c WHERE c.cart.id = :cartId")
     void deleteByCartId(@Param("cartId") UUID cartId);
 }
