@@ -1,0 +1,83 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home/index';
+import Products from './pages/Products/index';
+import ProductDetail from './pages/ProductDetail/index';
+import Artisans from './pages/Artisans/index';
+import ArtisanDetail from './pages/ArtisanDetail/index';
+import Trace from './pages/Trace/index';
+import MapPage from './pages/Map/index';
+import Header from '@/components/layout/Header';
+import Login from './pages/Auth/Login';
+import RegisterBuyer from './pages/Auth/RegisterBuyer';
+import RegisterArtisan from './pages/Auth/RegisterArtisan';
+import QuoteList from './pages/Quote/index';
+import NewQuote from './pages/Quote/New';
+import QuoteDetail from './pages/Quote/Detail';
+import Batches from './pages/Batches/index';
+import NewsList from './pages/News/index';
+import NewsDetail from './pages/News/Detail';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ArtisanOverview from './pages/Dashboard/Artisan/index';
+import ArtisanProfileEdit from './pages/Dashboard/Artisan/Profile';
+import NewProduct from './pages/Dashboard/Artisan/NewProduct';
+import NewBatch from './pages/Dashboard/Artisan/NewBatch';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/artisans" element={<Artisans />} />
+        <Route path="/artisans/:id" element={<ArtisanDetail />} />
+        <Route path="/trace/:batchId" element={<Trace />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterBuyer />} />
+        <Route path="/register/artisan" element={<RegisterArtisan />} />
+        <Route path="/quote" element={<QuoteList />} />
+        <Route path="/quote/new" element={<NewQuote />} />
+        <Route path="/quote/:id" element={<QuoteDetail />} />
+        <Route path="/batches" element={<Batches />} />
+        <Route path="/news" element={<NewsList />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
+
+        {/* ─── Artisan Dashboard ─── */}
+        <Route
+          path="/dashboard/artisan"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <ArtisanOverview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/artisan/profile"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <ArtisanProfileEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/artisan/products/new"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <NewProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/artisan/batches/new"
+          element={
+            <ProtectedRoute roles={['ARTISAN']}>
+              <NewBatch />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
