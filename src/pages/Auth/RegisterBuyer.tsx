@@ -15,20 +15,21 @@ export default function RegisterBuyer() {
     password: '',
     confirmPassword: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (getAccessToken()) {
-      navigate('/', { replace: true });
-    }
+    if (getAccessToken()) navigate('/', { replace: true });
   }, [navigate]);
 
-  const update = (k: keyof typeof form, v: string) =>
+  const update = (k: keyof typeof form, v: string) => {
     setForm((p) => ({ ...p, [k]: v }));
+    if (error) setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitState !== 'idle') return;
     setError(null);
 
     if (!form.name.trim() || !form.email.trim()) {
@@ -44,19 +45,19 @@ export default function RegisterBuyer() {
       return;
     }
 
-    setLoading(true);
+    setSubmitState('loading');
     try {
       await authApi.registerBuyer({
-        name: form.name.trim(),                    // ← name
+        name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
-        phone: form.phone.trim() || undefined,     // ← optional
+        phone: form.phone.trim() || undefined,
       });
-      navigate('/', { replace: true });
+      setSubmitState('success');
+      window.setTimeout(() => navigate('/', { replace: true }), 700);
     } catch (err) {
+      setSubmitState('idle');
       setError(err instanceof Error ? err.message : 'Đăng ký thất bại.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -67,81 +68,103 @@ export default function RegisterBuyer() {
       subtitle="Đặt mua sản phẩm độc bản, tạo yêu cầu báo giá sỉ, và theo dõi đơn hàng của bạn."
       quote="Mỗi lô gốm có một câu chuyện riêng."
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <AuthInput
-          id="name"
-          label="Họ tên"
-          placeholder="Nguyễn Văn A"
-          value={form.name}
-          onChange={(e) => update('name', e.target.value)}
-          required
-          disabled={loading}
-        />
+      <form onSubmit={handleSubmit} className="auth-stagger space-y-6" noValidate>
+        <div style={{ ['--i' as string]: 3 }}>
+          <AuthInput
+            id="name"
+            name="name"
+            label="Họ tên"
+            value={form.name}
+            onChange={(e) => update('name', e.target.value)}
+            autoComplete="name"
+            autoFocus
+            disabled={submitState !== 'idle'}
+          />
+        </div>
 
-        <AuthInput
-          id="email"
-          type="email"
-          label="Email"
-          placeholder="ban@example.com"
-          value={form.email}
-          onChange={(e) => update('email', e.target.value)}
-          autoComplete="email"
-          required
-          disabled={loading}
-        />
+        <div style={{ ['--i' as string]: 4 }}>
+          <AuthInput
+            id="email"
+            name="email"
+            type="email"
+            label="Email"
+            value={form.email}
+            onChange={(e) => update('email', e.target.value)}
+            autoComplete="email"
+            disabled={submitState !== 'idle'}
+          />
+        </div>
 
-        <AuthInput
-          id="phone"
-          type="tel"
-          label="Số điện thoại (tuỳ chọn)"
-          placeholder="0912 345 678"
-          value={form.phone}
-          onChange={(e) => update('phone', e.target.value)}
-          autoComplete="tel"
-          disabled={loading}
-        />
+        <div style={{ ['--i' as string]: 5 }}>
+          <AuthInput
+            id="phone"
+            name="phone"
+            type="tel"
+            label="Số điện thoại (tuỳ chọn)"
+            value={form.phone}
+            onChange={(e) => update('phone', e.target.value)}
+            autoComplete="tel"
+            disabled={submitState !== 'idle'}
+          />
+        </div>
 
-        <AuthInput
-          id="password"
-          type="password"
-          label="Mật khẩu"
-          placeholder="Ít nhất 6 ký tự"
-          value={form.password}
-          onChange={(e) => update('password', e.target.value)}
-          autoComplete="new-password"
-          required
-          disabled={loading}
-        />
+        <div style={{ ['--i' as string]: 6 }}>
+          <AuthInput
+            id="password"
+            name="password"
+            type="password"
+            label="Mật khẩu"
+            hint="Ít nhất 6 ký tự"
+            value={form.password}
+            onChange={(e) => update('password', e.target.value)}
+            autoComplete="new-password"
+            disabled={submitState !== 'idle'}
+          />
+        </div>
 
-        <AuthInput
-          id="confirmPassword"
-          type="password"
-          label="Xác nhận mật khẩu"
-          placeholder="Nhập lại mật khẩu"
-          value={form.confirmPassword}
-          onChange={(e) => update('confirmPassword', e.target.value)}
-          autoComplete="new-password"
-          required
-          disabled={loading}
-        />
+        <div style={{ ['--i' as string]: 7 }}>
+          <AuthInput
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            label="Xác nhận mật khẩu"
+            value={form.confirmPassword}
+            onChange={(e) => update('confirmPassword', e.target.value)}
+            autoComplete="new-password"
+            disabled={submitState !== 'idle'}
+          />
+        </div>
 
         {error && (
-          <p className="text-xs text-red-600 bg-red-50 px-3 py-2 border-l-2 border-red-500">
-            {error}
+          <p role="alert" className="auth-error" style={{ ['--i' as string]: 8 }}>
+            <span aria-hidden="true">⚠</span>
+            <span>{error}</span>
           </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-[#1f1b18] text-[#f6f1ea] rounded-full py-3 text-xs uppercase tracking-widest hover:bg-[#b45f3c] disabled:opacity-50 disabled:hover:bg-[#1f1b18] transition-colors"
+          disabled={submitState !== 'idle'}
+          className="auth-btn"
+          style={{ ['--i' as string]: 9 }}
         >
-          {loading ? 'Đang tạo tài khoản…' : 'Tạo tài khoản'}
+          <span className="auth-btn__content">
+            {submitState === 'loading' && <span className="auth-btn__spinner" />}
+            {submitState === 'success' && (
+              <svg className="auth-btn__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M7 12l3.5 3.5L17 9" />
+              </svg>
+            )}
+            {submitState === 'idle' && 'Tạo tài khoản'}
+            {submitState === 'loading' && 'Đang tạo tài khoản…'}
+            {submitState === 'success' && 'Thành công'}
+          </span>
         </button>
 
-        <div className="text-center text-xs text-[#1f1b18]/50 pt-2">
+        <div className="text-center text-sm text-[#1f1b18]/55 pt-2" style={{ ['--i' as string]: 10 }}>
           Đã có tài khoản?{' '}
-          <Link to="/login" className="text-[#b45f3c] hover:underline">
+          <Link to="/login" className="text-[#b45f3c] hover:underline font-medium">
             Đăng nhập
           </Link>
         </div>
