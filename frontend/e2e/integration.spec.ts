@@ -217,3 +217,75 @@ test('cart removes and clears items, blocks stale stock and protects anonymous c
   await page.getByLabel('Trạng thái', { exact: true }).selectOption('CANCELLED');
   await expect(page.getByText('Chưa có đơn hàng phù hợp.', { exact: true })).toBeVisible();
 });
+
+test('workshop manages batch logs, evidence photos and QR with public trace updates', async ({ page }) => {
+  const f = await fixtures();
+  await login(page, f.artisanEmail);
+  await page.goto('/batches');
+  await page.getByRole('link').filter({ hasText: f.batch.name }).click();
+  await expect(page).toHaveURL(new RegExp(`/batches/${f.batch.id}/manage$`));
+  await page.getByLabel('Tên lô', { exact: true }).fill('Lô hoàn thiện ' + f.uid);
+  await page.getByLabel('Mô tả lô', { exact: true }).fill('Theo dõi sản xuất có ảnh');
+  await page.getByLabel('Trạng thái lô', { exact: true }).selectOption('COMPLETED');
+  await page.getByRole('button', { name: 'Lưu thông tin lô', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Lô hoàn thiện ' + f.uid, exact: true })).toBeVisible();
+  await page.getByLabel('Công đoạn', { exact: true }).fill('Thành phẩm ' + f.uid);
+  await page.getByLabel('Thời gian thực hiện', { exact: true }).fill('2026-11-19T14:30');
+  await page.getByLabel('Ghi chú công đoạn mới', { exact: true }).fill('Kiểm tra men và đóng gói');
+  await page.getByRole('button', { name: 'Thêm nhật ký', exact: true }).click();
+  const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Thành phẩm ' + f.uid, exact: true }) });
+  await expect(card).toBeVisible();
+  let logs = await call('GET', `/batches/${f.batch.id}/logs`);
+  const log = logs.find((entry: {stage: string}) => entry.stage === 'Thành phẩm ' + f.uid);
+  expect(log.loggedAt).toBe('2026-11-19T07:30:00Z');
+  await card.getByLabel('Ghi chú công đoạn Thành phẩm ' + f.uid, { exact: true }).fill('Đạt chất lượng ' + f.uid);
+  await card.getByRole('button', { name: 'Lưu nhật ký', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Đã lưu');
+  await expect(card.getByLabel('Ghi chú công đoạn Thành phẩm ' + f.uid, { exact: true })).toHaveValue('Đạt chất lượng ' + f.uid);
+  await card.locator('input[type=file]').setInputFiles({ name: 'evidence.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aOaMAAAAASUVORK5CYII=', 'base64') });
+  await card.getByRole('button', { name: 'Upload ảnh minh chứng', exact: true }).click();
+  await expect(card.getByRole('img')).toHaveCount(1);
+  logs = await call('GET', `/batches/${f.batch.id}/logs`);
+  const updated = logs.find((entry: {id: string}) => entry.id === log.id);
+  expect(updated.images[0]).toContain('/uploads/logs/');
+  await page.goto('/trace/' + f.batch.id);
+  await expect(page.getByText('Đạt chất lượng ' + f.uid, { exact: true })).toBeVisible();
+  await expect(page.locator(`img[src="${updated.images[0]}"]`)).toBeVisible();
+  await page.goto(`/batches/${f.batch.id}/manage`);
+  await card.getByRole('button', { name: 'Bỏ ảnh 1', exact: true }).click();
+  await card.getByRole('button', { name: 'Lưu nhật ký', exact: true }).click();
+  await expect(card.getByRole('img')).toHaveCount(0);
+  const beforeQr = (await call('GET', '/batches/' + f.batch.id)).qrCodeUrl;
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Sinh lại QR', exact: true }).click();
+  await expect.poll(async () => (await call('GET', '/batches/' + f.batch.id)).qrCodeUrl).not.toBe(beforeQr);
+  await card.getByRole('button', { name: 'Xóa nhật ký', exact: true }).click();
+  await expect(card).toHaveCount(0);
+  await page.goto('/trace/' + f.batch.id);
+  await expect(page.getByText('Đạt chất lượng ' + f.uid, { exact: true })).toHaveCount(0);
+  const after = await call('GET', '/batches/' + f.batch.id);
+  expect(after.status).toBe('COMPLETED');
+});
+
+test('another workshop cannot manage or mutate a production batch', async ({ page }) => {
+  const f = await fixtures(), g = await fixtures();
+  await login(page, g.artisanEmail);
+  await page.goto(`/batches/${f.batch.id}/manage`);
+  await expect(page.getByRole('alert')).toContainText('Bạn chỉ được quản lý lô của xưởng mình');
+  await expect(page.getByRole('button', { name: 'Thêm nhật ký', exact: true })).toHaveCount(0);
+  const before = await call('GET', `/batches/${f.batch.id}/logs`);
+  for (const [method, path, data] of [
+    ['POST', `/batches/${f.batch.id}/logs`, { stage: 'Unauthorized' }],
+    ['PUT', `/batches/${f.batch.id}/logs/${before[0].id}`, { note: 'Unauthorized' }],
+    ['DELETE', `/batches/${f.batch.id}/logs/${before[0].id}`, undefined],
+    ['PUT', `/batches/${f.batch.id}`, { name: 'Unauthorized' }],
+  ] as const) {
+    const response = await api.fetch('/api/v1' + path, { method, data, headers: { Authorization: `Bearer ${g.artisanAuth.accessToken}` } });
+    expect(response.status()).toBe(403);
+  }
+  expect(await call('GET', `/batches/${f.batch.id}/logs`)).toEqual(before);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/batches/${g.batch.id}/manage`);
+  await expect(page.getByRole('button', { name: 'Thêm nhật ký', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

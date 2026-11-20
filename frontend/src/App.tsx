@@ -20,6 +20,7 @@ const RegisterArtisan = lazy(() => import('./pages/Auth/RegisterArtisan'));
 const QuoteList = lazy(() => import('./pages/Quote/index'));
 const NewQuote = lazy(() => import('./pages/Quote/New'));
 const QuoteDetail = lazy(() => import('./pages/Quote/Detail'));
+const ManageBatch = lazy(() => import('./pages/Batches/Manage'));
 const Batches = lazy(() => import('./pages/Batches/index'));
 const NewsList = lazy(() => import('./pages/News/index'));
 const NewsDetail = lazy(() => import('./pages/News/Detail'));
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="/quote" element={<QuoteList />} />
         <Route path="/quote/new" element={<ProtectedRoute roles={['BUYER', 'ADMIN']}><NewQuote /></ProtectedRoute>} />
         <Route path="/quote/:id" element={<QuoteDetail />} />
+        <Route path="/batches/:id/manage" element={<ProtectedRoute roles={['ARTISAN']}><ManageBatch /></ProtectedRoute>} />
         <Route path="/batches" element={<ProtectedRoute roles={['ARTISAN']}><Batches /></ProtectedRoute>} />
         <Route path="/news" element={<NewsList />} />
         <Route path="/news/:id" element={<NewsDetail />} />

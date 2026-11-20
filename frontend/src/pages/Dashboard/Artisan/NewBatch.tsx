@@ -99,10 +99,10 @@ export default function NewBatch() {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <Link
-                to={`/trace/${created.id}`}
+                to={`/batches/${created.id}/manage`}
                 className="flex-1 text-center bg-[#d9a08b] text-[#1f1b18] rounded-full px-7 py-3 text-xs uppercase tracking-widest hover:bg-[#f6f1ea] transition-colors"
               >
-                Xem nhật ký →
+                Quản lý nhật ký →
               </Link>
               <Link
                 to="/dashboard/artisan/batches/new"

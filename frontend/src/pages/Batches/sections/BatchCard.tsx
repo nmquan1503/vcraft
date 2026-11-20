@@ -18,7 +18,7 @@ const fmt = (iso: string) => {
 export default function BatchCard({ batch, artisanName }: Props) {
   return (
     <Link
-      to={`/trace/${batch.id}`}
+      to={`/batches/${batch.id}/manage`}
       className="group block border border-[#1f1b18]/10 hover:border-[#1f1b18]/30 transition-colors"
     >
       <div className="flex gap-5 p-6">
@@ -68,7 +68,7 @@ export default function BatchCard({ batch, artisanName }: Props) {
               Mã: {batch.id}
             </span>
             <span className="text-[10px] uppercase tracking-widest text-[#b45f3c] group-hover:underline">
-              Xem nhật ký →
+              Quản lý nhật ký →
             </span>
           </div>
         </div>

@@ -1,145 +1,47 @@
-import { useEffect, useMemo, useState } from 'react';
-import { batchApi, artisanApi } from '@/api';
-import { getUser } from '@/utils/tokenStorage';
-import type { Batch, BatchStatus, ArtisanProfile } from '@/types';
-
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import client from '@/api/client';
+import { toApiError } from '@/api/_helpers';
+import type { Batch, BatchStatus, PageResponse } from '@/types';
 import BatchCard from './sections/BatchCard';
 import BatchFilter from './sections/BatchFilter';
 import Pagination from './sections/Pagination';
 import Footer from '@/components/layout/Footer';
 
 type FilterValue = BatchStatus | 'ALL' | 'MINE';
-const PAGE_SIZE = 10;
-
 export default function Batches() {
-  const user = getUser();
-  const isArtisan = user?.role === 'ARTISAN';
-
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
-  const [myArtisanId, setMyArtisanId] = useState<string | null>(null);
-  const [loadedQuery, setLoadedQuery] = useState<string|null>(null);
-
   const [filter, setFilter] = useState<FilterValue>('ALL');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-
-  // Prefetch artisan names + xưởng của tôi
-  const queryKey=JSON.stringify([filter,page,myArtisanId]);
-  const loading=loadedQuery!==queryKey;
-
+  const [data, setData] = useState<PageResponse<Batch> | null>(null);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const [loaded, setLoaded] = useState('');
+  const query = JSON.stringify([filter, page, retry]);
   useEffect(() => {
-    artisanApi.list({ limit: 100 }).then((r) => setArtisans(r.data));
-    if (isArtisan) {
-      artisanApi.getMe().then((a) => setMyArtisanId(a?.id ?? null));
-    }
-  }, [isArtisan]);
-
-  // Fetch batches
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const statusParam: BatchStatus | undefined =
-          filter === 'IN_PROGRESS' || filter === 'COMPLETED'
-            ? filter
-            : undefined;
-
-        const res = await batchApi.list({
-          page,
-          limit: PAGE_SIZE,
-          status: statusParam,
-        });
-
-        if (cancelled) return;
-
-        const data=res.data;
-        const total=res.totalElements;
-        const pages=res.totalPages;
-
-        setBatches(data);
-        setTotalCount(total);
-        setTotalPages(pages);
-      } finally {
-        if (!cancelled) setLoadedQuery(queryKey);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [filter, page, myArtisanId, queryKey]);
-
-  const handleFilterChange = (v: FilterValue) => {
-    setFilter(v);
-    setPage(1);
-  };
-
-  // Lookup tên xưởng theo artisanId
-  const artisanNameMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    artisans.forEach((a) => { map[a.id] = a.workshopName; });
-    return map;
-  }, [artisans]);
-
-  return (
-    <main className="bg-[#f6f1ea] text-[#1f1b18] min-h-screen">
-      {/* Header */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 md:pt-32 pb-10">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b45f3c] mb-6">
-          Lô sản xuất
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <h1 className="font-serif text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] tracking-tight max-w-2xl">
-            Mỗi lô gốm
-            <br />
-            một <em className="italic text-[#b45f3c]">câu chuyện</em>.
-          </h1>
-          <p className="text-sm text-[#1f1b18]/40 pb-2">
-            {loading ? '…' : `${totalCount} lô`}
-          </p>
-        </div>
-      </section>
-
-      {/* Filter */}
-      <section className="max-w-6xl mx-auto px-6 pb-4 border-b border-[#1f1b18]/10">
-        <BatchFilter
-          active={filter}
-          onChange={handleFilterChange}
-          showMine={false}
-        />
-      </section>
-
-      {/* List */}
-      <section className="max-w-6xl mx-auto px-6 py-12">
-        {loading ? (
-          <p className="text-sm text-[#1f1b18]/40">Đang tải…</p>
-        ) : batches.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="font-serif text-2xl text-[#1f1b18]/40">
-              {filter === 'MINE'
-                ? 'Xưởng bạn chưa có lô sản xuất nào.'
-                : 'Chưa có lô sản xuất nào.'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2">
-            {batches.map((b) => (
-              <BatchCard
-                key={b.id}
-                batch={b}
-                artisanName={artisanNameMap[b.artisanId]}
-              />
-            ))}
-          </div>
-        )}
-
-        {filter !== 'MINE' && (
-          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-        )}
-      </section>
-
-      <Footer />
-    </main>
-  );
+    let active = true;
+    client.get<PageResponse<Batch>>('/batches', { params: { page, limit: 10, status: filter === 'ALL' || filter === 'MINE' ? undefined : filter } })
+      .then(response => { if (active) { setData(response.data); setError(''); } })
+      .catch(failure => { if (active) { setError(toApiError(failure).message); setData(null); } })
+      .finally(() => { if (active) setLoaded(query); });
+    return () => { active = false; };
+  }, [filter, page, query]);
+  const loading = loaded !== query;
+  return <main className="bg-[#f6f1ea] text-[#1f1b18] min-h-screen">
+    <section className="max-w-6xl mx-auto px-6 pt-24 md:pt-32 pb-10 space-y-6">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b45f3c]">Lô sản xuất của xưởng</p>
+      <h1 className="font-serif text-4xl md:text-6xl">Mỗi lô gốm, một câu chuyện.</h1>
+      <p>{loading ? 'Đang tải…' : `${data?.totalElements ?? 0} lô`}</p>
+      <Link className="underline inline-block" to="/dashboard/artisan/batches/new">+ Tạo lô sản xuất</Link>
+      <BatchFilter active={filter} onChange={value => { setFilter(value); setPage(1); }} showMine={false} />
+    </section>
+    <section className="max-w-6xl mx-auto px-6 py-12">
+      {loading ? <p>Đang tải…</p> : error ? <div role="alert" className="space-y-4">
+        <p>{error}</p><button className="border rounded px-4 py-2" onClick={() => setRetry(value => value + 1)}>Thử lại</button>
+      </div> : <>
+        {!data?.data.length ? <p>Xưởng bạn chưa có lô phù hợp.</p> : <div className="grid gap-5 md:grid-cols-2">{data.data.map(batch => <BatchCard key={batch.id} batch={batch} />)}</div>}
+        <Pagination page={page} totalPages={data?.totalPages ?? 0} onChange={setPage} />
+      </>}
+    </section>
+    <Footer />
+  </main>;
 }

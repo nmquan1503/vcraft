@@ -7,6 +7,9 @@ interface Props {
 export default function Pagination({ page, totalPages, onChange }: Props) {
   if (totalPages <= 1) return null;
 
+  const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => start + i);
+
   return (
     <div className="flex items-center justify-center gap-1 pt-12">
       <button
@@ -17,9 +20,11 @@ export default function Pagination({ page, totalPages, onChange }: Props) {
         ← Trước
       </button>
 
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+      {pages.map((p) => (
         <button
           key={p}
+          aria-current={p === page ? 'page' : undefined}
+          aria-label={`Trang ${p}`}
           onClick={() => onChange(p)}
           className={`w-9 h-9 text-xs transition-colors ${
             p === page
