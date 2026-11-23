@@ -1,130 +1,241 @@
+import { motion, type Variants } from 'framer-motion';
 import type { ProductionLog } from '@/types';
 
 interface Props {
   logs: ProductionLog[];
 }
 
-const formatDate = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const reveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease,
+    },
+  },
 };
 
-const formatTime = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return '';
-  }
+const containerReveal: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const formatDate = (iso?: string | null) => {
+  if (!iso) return 'Chưa cập nhật';
+
+  const date = new Date(iso);
+
+  if (Number.isNaN(date.getTime())) return iso;
+
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const formatTime = (iso?: string | null) => {
+  if (!iso) return '';
+
+  const date = new Date(iso);
+
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 export default function ProductionTimeline({ logs }: Props) {
   return (
-    <section className="bg-[#f6f1ea] py-20 md:py-28 border-t border-[#1f1b18]/10">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid md:grid-cols-12 gap-12 mb-16">
-          <div className="md:col-span-4">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-[#b45f3c] mb-5">
-              Nhật ký sản xuất
-            </p>
-            <h2 className="font-serif text-3xl md:text-4xl leading-tight">
+    <section className="relative isolate overflow-hidden border-t border-[#1f1b18]/10 bg-[#f6f1ea] py-20 sm:py-24 md:py-28">
+      <div className="pointer-events-none absolute -left-48 top-1/3 h-[480px] w-[480px] rounded-full border border-[#b45f3c]/[0.06]" />
+      <div className="pointer-events-none absolute -left-24 top-1/3 h-[320px] w-[320px] rounded-full border border-[#b45f3c]/[0.06]" />
+
+      <div className="relative mx-auto max-w-[1440px] px-5 sm:px-8 md:px-12 lg:px-20">
+        <div className="mb-14 grid gap-10 md:mb-20 md:grid-cols-12 md:gap-12 lg:gap-20">
+          <motion.div
+            variants={reveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.25 }}
+            className="md:col-span-4"
+          >
+            <div className="mb-6 flex items-center gap-3">
+              <span className="h-px w-9 bg-[#b45f3c]" />
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#b45f3c] sm:text-[11px]">
+                Nhật ký sản xuất
+              </p>
+            </div>
+
+            <h2 className="font-serif text-[clamp(2.6rem,5vw,4rem)] leading-[1.08] tracking-[-0.035em] text-[#1f1b18]">
               Từ đất
               <br />
-              đến thành phẩm.
+              đến <span className="italic text-[#b45f3c]">thành phẩm.</span>
             </h2>
-            <p className="mt-6 text-sm text-[#1f1b18]/60 leading-relaxed max-w-xs">
-              Mỗi công đoạn đều được ghi lại — ngày tháng, hình ảnh, và ghi
-              chú của nghệ nhân.
-            </p>
-          </div>
 
-          {/* Timeline */}
-          <div className="md:col-span-8">
+            <p className="mt-6 max-w-sm text-sm leading-[1.9] text-[#1f1b18]/55">
+              Mỗi công đoạn đều được ghi lại — từ thời điểm thực hiện đến
+              hình ảnh và ghi chú của nghệ nhân trong suốt quá trình tạo tác.
+            </p>
+
+            <div className="mt-9 flex items-center gap-4">
+              <span className="font-serif text-5xl text-[#b45f3c]/20">
+                {String(logs.length).padStart(2, '0')}
+              </span>
+              <div>
+                <span className="block text-[10px] uppercase tracking-[0.2em] text-[#1f1b18]/70">
+                  Công đoạn
+                </span>
+                <span className="mt-1 block text-xs text-[#1f1b18]/40">
+                  Được ghi nhận
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="min-w-0 md:col-span-8">
             {logs.length === 0 ? (
-              <p className="text-sm text-[#1f1b18]/40">
-                Lô này chưa có nhật ký sản xuất.
-              </p>
+              <motion.div
+                variants={reveal}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="flex min-h-[220px] flex-col justify-center border-y border-[#1f1b18]/15 py-10"
+              >
+                <span className="font-serif text-5xl italic text-[#b45f3c]/25">
+                  ...
+                </span>
+                <h3 className="mt-4 font-serif text-2xl text-[#1f1b18]">
+                  Hành trình đang chờ được ghi lại.
+                </h3>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#1f1b18]/50">
+                  Lô sản phẩm này hiện chưa có nhật ký sản xuất.
+                </p>
+              </motion.div>
             ) : (
-              <ol className="relative">
-                {/* Đường dọc */}
+              <motion.ol
+                variants={containerReveal}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.08 }}
+                className="relative"
+              >
                 <div
-                  className="absolute left-[11px] top-2 bottom-2 w-px bg-[#1f1b18]/15"
                   aria-hidden="true"
+                  className="absolute bottom-3 left-[11px] top-3 w-px bg-[#1f1b18]/15 sm:left-[15px]"
                 />
 
-                {logs.map((log, i) => (
-                  <li key={log.id} className="relative pl-10 pb-12 last:pb-0">
-                    {/* Chấm tròn */}
-                    <span
-                      className={`absolute left-0 top-1.5 w-6 h-6 rounded-full flex items-center justify-center ${
-                        i === 0
-                          ? 'bg-[#b45f3c] text-[#f6f1ea]'
-                          : 'bg-[#f6f1ea] border border-[#1f1b18]/30'
-                      }`}
+                {logs.map((log, index) => {
+                  const isLatest = index === 0;
+                  const time = formatTime(log.loggedAt);
+
+                  return (
+                    <motion.li
+                      key={log.id}
+                      variants={reveal}
+                      className="relative pb-14 pl-10 last:pb-0 sm:pl-14 md:pb-16"
                     >
                       <span
-                        className={`w-2 h-2 rounded-full ${
-                          i === 0 ? 'bg-[#f6f1ea]' : 'bg-[#1f1b18]/40'
+                        className={`absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full sm:h-8 sm:w-8 sm:left-0 ${
+                          isLatest
+                            ? 'bg-[#b45f3c] shadow-[0_0_0_5px_rgba(180,95,60,0.12)]'
+                            : 'border border-[#1f1b18]/25 bg-[#f6f1ea]'
                         }`}
-                      />
-                    </span>
+                      >
+                        <span
+                          className={`h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5 ${
+                            isLatest
+                              ? 'bg-[#f6f1ea]'
+                              : 'bg-[#1f1b18]/35'
+                          }`}
+                        />
+                      </span>
 
-                    {/* Nội dung */}
-                    <div>
-                      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                        <h3 className="font-serif text-xl md:text-2xl text-[#1f1b18]">
+                      <div className="min-w-0">
+                        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                          <span className="text-[9px] uppercase tracking-[0.2em] text-[#1f1b18]/35 sm:text-[10px]">
+                            Công đoạn {String(index + 1).padStart(2, '0')}
+                          </span>
+
+                          {isLatest && (
+                            <span className="rounded-full bg-[#b45f3c]/10 px-3 py-1 text-[8px] uppercase tracking-[0.16em] text-[#b45f3c] sm:text-[9px]">
+                              Mới nhất
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="break-words font-serif text-2xl leading-tight text-[#1f1b18] sm:text-3xl">
                           {log.stage}
                         </h3>
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-[#1f1b18]/40">
-                          Bước {i + 1} / {logs.length}
-                        </span>
-                      </div>
 
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-[#b45f3c]/80">
-                        {formatDate(log.loggedAt)}
-                        {formatTime(log.loggedAt) && (
-                          <span className="text-[#1f1b18]/40 ml-2">
-                            · {formatTime(log.loggedAt)}
-                          </span>
-                        )}
-                      </p>
-
-                      {log.note && (
-                        <p className="mt-4 text-sm md:text-base text-[#1f1b18]/70 leading-relaxed max-w-xl">
-                          {log.note}
-                        </p>
-                      )}
-
-                      {log.images.length > 0 && (
-                        <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {log.images.map((img, idx) => (
-                            <div
-                              key={idx}
-                              className="aspect-square overflow-hidden bg-[#1f1b18]/5"
-                            >
-                              <img
-                                src={img}
-                                alt={`${log.stage} - ảnh ${idx + 1}`}
-                                loading="lazy"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ))}
+                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.15em] text-[#b45f3c]/85 sm:text-[11px]">
+                          <span>{formatDate(log.loggedAt)}</span>
+                          {time && (
+                            <>
+                              <span className="h-1 w-1 rounded-full bg-[#1f1b18]/25" />
+                              <span className="text-[#1f1b18]/45">
+                                {time}
+                              </span>
+                            </>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
+
+                        {log.note && (
+                          <p className="mt-5 max-w-2xl break-words text-sm leading-[1.9] text-[#1f1b18]/65 sm:text-base">
+                            {log.note}
+                          </p>
+                        )}
+
+                        {log.images?.length > 0 && (
+                          <div
+                            className={`mt-6 grid grid-cols-2 gap-3 ${
+                              log.images.length >= 3
+                                ? 'sm:grid-cols-3'
+                                : ''
+                            }`}
+                          >
+                            {log.images.map((img, imageIndex) => (
+                              <div
+                                key={`${log.id}-${imageIndex}`}
+                                className={`group relative overflow-hidden bg-[#e9dfd3] ${
+                                  imageIndex === 0 && log.images.length >= 3
+                                    ? 'col-span-2 aspect-[16/9] sm:col-span-2 sm:aspect-[5/3]'
+                                    : 'aspect-[4/5]'
+                                } ${
+                                  imageIndex % 2 === 0
+                                    ? 'rounded-tl-[38px] rounded-br-[38px]'
+                                    : 'rounded-tr-[38px] rounded-bl-[38px]'
+                                }`}
+                              >
+                                <img
+                                  src={img}
+                                  alt={`${log.stage} - ảnh ${imageIndex + 1}`}
+                                  loading="lazy"
+                                  className="h-full w-full object-cover transition-transform duration-[1000ms] ease-out group-hover:scale-105"
+                                />
+                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1f1b18]/15 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </motion.li>
+                  );
+                })}
+              </motion.ol>
             )}
           </div>
         </div>
