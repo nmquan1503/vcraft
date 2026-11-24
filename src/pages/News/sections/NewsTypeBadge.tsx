@@ -6,18 +6,33 @@ const LABELS: Record<NewsType, string> = {
   POLICY: 'Chính sách',
 };
 
-const COLORS: Record<NewsType, string> = {
-  PRICE: 'bg-amber-100 text-amber-800',
-  SCHEDULE: 'bg-blue-100 text-blue-800',
-  POLICY: 'bg-green-100 text-green-800',
+const STYLES: Record<NewsType, string> = {
+  PRICE: 'bg-[#ead9c4] text-[#80532e]',
+  SCHEDULE: 'bg-[#dce4dc] text-[#526b55]',
+  POLICY: 'bg-[#ead8d2] text-[#99543e]',
+};
+
+const MARKS: Record<NewsType, string> = {
+  PRICE: '01',
+  SCHEDULE: '02',
+  POLICY: '03',
 };
 
 export default function NewsTypeBadge({ type }: { type: NewsType }) {
   return (
     <span
-      className={`inline-flex px-3 py-1 rounded-full text-[10px] uppercase tracking-widest ${COLORS[type]}`}
+      className={`
+        inline-flex w-fit items-center gap-2
+        px-3 py-1.5
+        text-[9px] font-medium uppercase tracking-[0.13em]
+        ${STYLES[type]}
+      `}
     >
-      {LABELS[type]}
+      <span className="text-[8px] opacity-50">
+        {MARKS[type]}
+      </span>
+
+      <span>{LABELS[type]}</span>
     </span>
   );
 }
