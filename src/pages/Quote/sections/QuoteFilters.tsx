@@ -14,29 +14,50 @@ const ALL: Array<{ value: QuoteStatus | 'ALL'; label: string }> = [
 interface Props {
   variant: 'buyer' | 'artisan';
   active: QuoteStatus | 'ALL';
-  onChange: (v: QuoteStatus | 'ALL') => void;
+  onChange: (value: QuoteStatus | 'ALL') => void;
 }
 
-export default function QuoteFilters({ variant, active, onChange }: Props) {
-  const options = variant === 'buyer'
-    ? ALL
-    : ALL.filter((o) => ['ALL', 'SENT', 'BIDDING'].includes(o.value as string));
+export default function QuoteFilters({
+  variant,
+  active,
+  onChange,
+}: Props) {
+  const options =
+    variant === 'buyer'
+      ? ALL
+      : ALL.filter((option) =>
+          ['ALL', 'SENT', 'BIDDING'].includes(option.value),
+        );
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-widest border transition-colors ${
-            active === o.value
-              ? 'bg-[#1f1b18] text-[#f6f1ea] border-[#1f1b18]'
-              : 'border-[#1f1b18]/20 text-[#1f1b18]/60 hover:border-[#b45f3c] hover:text-[#b45f3c]'
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div
+      className="flex flex-wrap items-center gap-2"
+      role="group"
+      aria-label="Lọc yêu cầu báo giá theo trạng thái"
+    >
+      {options.map((option) => {
+        const isActive = active === option.value;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            aria-pressed={isActive}
+            className={`relative inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[9px] font-medium uppercase tracking-[0.15em] transition-all duration-300 sm:px-5 ${
+              isActive
+                ? 'border-[#b45f3c] bg-[#b45f3c] text-[#fbf8f3] shadow-[0_4px_14px_rgba(180,95,60,0.16)]'
+                : 'border-[#1f1b18]/10 bg-transparent text-[#1f1b18]/55 hover:border-[#b45f3c]/45 hover:bg-[#b45f3c]/[0.04] hover:text-[#b45f3c]'
+            }`}
+          >
+            {isActive && (
+              <span className="h-1 w-1 rounded-full bg-[#fbf8f3]" />
+            )}
+
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
